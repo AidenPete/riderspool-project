@@ -297,6 +297,10 @@ function ProviderProfile() {
             <Card title="Additional Information">
               <div className="info-list">
                 <div className="info-item">
+                  <span className="info-label">Registered Name:</span>
+                  <span className="info-value">{provider.fullName}</span>
+                </div>
+                <div className="info-item">
                   <span className="info-label">Location:</span>
                   <span className="info-value">{provider.city}, {provider.region}</span>
                 </div>

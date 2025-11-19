@@ -126,18 +126,235 @@ function MyInterviews() {
     return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const handleAccept = (interviewId) => {
+  const handleAccept = async (interviewId) => {
+    const interview = interviews.find(i => i.id === interviewId);
+
     if (confirm('Are you sure you want to accept this interview?')) {
-      // TODO: API call to accept interview
-      alert('Interview accepted successfully!');
+      try {
+        // TODO: API call to accept interview
+        /*
+        API Endpoint: POST /api/interviews/{interviewId}/accept
+
+        Backend Actions:
+        1. Update interview status to 'confirmed'
+        2. Send Email to Employer:
+           - Subject: "{providerName} Accepted Your Interview Request"
+           - Body: Confirmation details, date, time, location, next steps
+
+        3. Send SMS to Employer:
+           - "{providerName} accepted your interview on {date} at {time}.
+            Location: {officeName}. See you there!"
+
+        4. Send Confirmation Email to Provider:
+           - Subject: "Interview Confirmed with {employerName}"
+           - Body: Interview details, reminders, office location
+
+        5. Send SMS to Provider:
+           - "Interview confirmed with {employerName} on {date} at {time}.
+            Location: {officeName}. We've sent you a confirmation email."
+        */
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        console.log('Interview Accepted:', {
+          interviewId,
+          providerName: user.fullName,
+          employerName: interview.employer.companyName,
+        });
+
+        console.log('Email to Employer:', {
+          to: interview.employer.email || 'employer@email.com',
+          subject: `${user.fullName} Accepted Your Interview Request`,
+          body: `
+            Good news! ${user.fullName} has accepted your interview request.
+
+            Interview Details:
+            Date: ${new Date(interview.date).toDateString()}
+            Time: ${interview.time}
+            Duration: ${interview.duration}
+            Location: ${interview.office.name}
+            Address: ${interview.office.address}
+
+            ${user.fullName} will meet you at the office. Please arrive 10 minutes early.
+
+            See you at the interview!
+          `,
+        });
+
+        console.log('SMS to Employer:', {
+          to: interview.employer.phone || 'Employer Phone',
+          message: `${user.fullName} accepted your interview on ${new Date(interview.date).toDateString()} at ${interview.time}. Location: ${interview.office.name}. See you there!`,
+        });
+
+        alert(`✅ Interview Accepted Successfully!
+
+📧 Notifications Sent:
+• Email to ${interview.employer.companyName}
+• SMS to ${interview.employer.companyName}
+• Confirmation email to you
+
+The employer has been notified that you accepted the interview.
+
+Interview Details:
+📅 ${new Date(interview.date).toDateString()}
+🕐 ${interview.time}
+📍 ${interview.office.name}
+
+We've sent you a confirmation email with all the details.`);
+
+      } catch (error) {
+        alert('Failed to accept interview. Please try again.');
+      }
     }
   };
 
-  const handleDecline = (interviewId) => {
+  const handleDecline = async (interviewId) => {
+    const interview = interviews.find(i => i.id === interviewId);
     const reason = prompt('Please provide a reason for declining (optional):');
+
     if (reason !== null) {
-      // TODO: API call to decline interview with reason
-      alert('Interview declined.');
+      try {
+        // TODO: API call to decline interview with reason
+        /*
+        API Endpoint: POST /api/interviews/{interviewId}/decline
+
+        Backend Actions:
+        1. Update interview status to 'declined'
+        2. Send Email to Employer:
+           - Subject: "{providerName} Declined Your Interview Request"
+           - Body: Include decline reason, suggest other providers
+
+        3. Send SMS to Employer:
+           - "{providerName} declined your interview request.
+            {reason}. Search for other providers on Riderspool."
+
+        4. Send Confirmation Email to Provider:
+           - Subject: "Interview Request Declined"
+           - Body: Confirmation that the request was declined
+        */
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        console.log('Interview Declined:', {
+          interviewId,
+          providerName: user.fullName,
+          employerName: interview.employer.companyName,
+          reason,
+        });
+
+        console.log('Email to Employer:', {
+          to: interview.employer.email || 'employer@email.com',
+          subject: `${user.fullName} Declined Your Interview Request`,
+          body: `
+            ${user.fullName} has declined your interview request.
+
+            ${reason ? `Reason: ${reason}` : 'No reason provided'}
+
+            Don't worry! There are many other qualified providers on Riderspool.
+            Search for more providers in the ${interview.provider?.category || 'same'} category.
+
+            Visit your dashboard to find more candidates.
+          `,
+        });
+
+        console.log('SMS to Employer:', {
+          to: interview.employer.phone || 'Employer Phone',
+          message: `${user.fullName} declined your interview request. ${reason ? reason : 'No reason provided'}. Search for other providers on Riderspool.`,
+        });
+
+        alert(`Interview Declined
+
+📧 Notifications Sent:
+• Email to ${interview.employer.companyName}
+• SMS to ${interview.employer.companyName}
+
+The employer has been notified of your decision.`);
+
+      } catch (error) {
+        alert('Failed to decline interview. Please try again.');
+      }
+    }
+  };
+
+  const handleReschedule = async (interviewId) => {
+    const interview = interviews.find(i => i.id === interviewId);
+    const reason = prompt('Please provide a reason for rescheduling:');
+
+    if (reason) {
+      try {
+        // TODO: API call to request reschedule with reason
+        /*
+        API Endpoint: POST /api/interviews/{interviewId}/reschedule
+
+        Backend Actions:
+        1. Update interview status to 'reschedule_requested'
+        2. Send Email to Employer:
+           - Subject: "{providerName} Requested to Reschedule Interview"
+           - Body: Current schedule, reschedule reason, link to propose new time
+
+        3. Send SMS to Employer:
+           - "{providerName} requested to reschedule interview on {date}.
+            Reason: {reason}. Check email for details."
+
+        4. Send Confirmation Email to Provider:
+           - Subject: "Reschedule Request Sent"
+           - Body: Confirmation, employer will be notified
+
+        5. Send SMS to Provider:
+           - "Reschedule request sent to {employerName}.
+            You'll be notified when they respond."
+        */
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        console.log('Reschedule Request:', {
+          interviewId,
+          providerName: user.fullName,
+          employerName: interview.employer.companyName,
+          reason,
+          originalDate: interview.date,
+          originalTime: interview.time,
+        });
+
+        console.log('Email to Employer:', {
+          to: interview.employer.email || 'employer@email.com',
+          subject: `${user.fullName} Requested to Reschedule Interview`,
+          body: `
+            ${user.fullName} has requested to reschedule your interview.
+
+            Current Schedule:
+            Date: ${new Date(interview.date).toDateString()}
+            Time: ${interview.time}
+            Location: ${interview.office.name}
+
+            Reason for Rescheduling:
+            ${reason}
+
+            Please login to your Riderspool account to propose a new time
+            or contact ${user.fullName} directly.
+
+            We understand schedules can change. Thank you for your flexibility.
+          `,
+        });
+
+        console.log('SMS to Employer:', {
+          to: interview.employer.phone || 'Employer Phone',
+          message: `${user.fullName} requested to reschedule interview on ${new Date(interview.date).toDateString()}. Reason: ${reason}. Check your email for details.`,
+        });
+
+        alert(`📅 Reschedule Request Sent
+
+📧 Notifications Sent:
+• Email to ${interview.employer.companyName}
+• SMS to ${interview.employer.companyName}
+
+The employer has been notified of your reschedule request.
+
+You will receive an email and SMS notification when ${interview.employer.companyName} responds with a new proposed time.`);
+
+      } catch (error) {
+        alert('Failed to send reschedule request. Please try again.');
+      }
     }
   };
 
@@ -280,6 +497,9 @@ function MyInterviews() {
                         <span className="confirmed-icon">✓</span>
                         <span>You have confirmed this interview. See you at the office!</span>
                       </div>
+                      <Button variant="outline" size="small" onClick={() => handleReschedule(interview.id)}>
+                        Request Reschedule
+                      </Button>
                     </>
                   )}
 

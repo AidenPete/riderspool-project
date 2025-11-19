@@ -138,9 +138,86 @@ function MyBookings() {
     }
   };
 
-  const handleReschedule = (bookingId) => {
-    alert('Reschedule feature coming soon!');
-    // TODO: Navigate to reschedule page
+  const handleReschedule = async (bookingId) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    const reason = prompt('Please provide a reason for rescheduling and your preferred new date/time:');
+
+    if (reason) {
+      try {
+        // TODO: API call to request reschedule with reason
+        /*
+        API Endpoint: POST /api/bookings/{bookingId}/reschedule
+
+        Backend Actions:
+        1. Update booking status to 'reschedule_requested'
+        2. Send Email to Provider:
+           - Subject: "{employerName} Requested to Reschedule Interview"
+           - Body: Current schedule, reschedule reason/preference, link to confirm
+
+        3. Send SMS to Provider:
+           - "{employerName} requested to reschedule interview on {date}.
+            {reason}. Check email for details."
+
+        4. Send Confirmation Email to Employer:
+           - Subject: "Reschedule Request Sent to {providerName}"
+           - Body: Confirmation, provider will be notified
+
+        5. Send SMS to Employer:
+           - "Reschedule request sent to {providerName}.
+            You'll be notified when they respond."
+        */
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        console.log('Reschedule Request (Employer):', {
+          bookingId,
+          employerName: user.companyName || user.fullName,
+          providerName: booking.provider.name,
+          reason,
+          originalDate: booking.date,
+          originalTime: booking.time,
+        });
+
+        console.log('Email to Provider:', {
+          to: 'provider@email.com',
+          subject: `${user.companyName || user.fullName} Requested to Reschedule Interview`,
+          body: `
+            ${user.companyName || user.fullName} has requested to reschedule your interview.
+
+            Current Schedule:
+            Date: ${new Date(booking.date).toDateString()}
+            Time: ${booking.time}
+            Location: ${booking.office.name}
+
+            Employer's Request:
+            ${reason}
+
+            Please login to your Riderspool account to confirm the new time
+            or propose an alternative.
+
+            We understand schedules can change. Thank you for your flexibility.
+          `,
+        });
+
+        console.log('SMS to Provider:', {
+          to: 'Provider Phone',
+          message: `${user.companyName || user.fullName} requested to reschedule interview on ${new Date(booking.date).toDateString()}. ${reason}. Check your email for details.`,
+        });
+
+        alert(`📅 Reschedule Request Sent
+
+📧 Notifications Sent:
+• Email to ${booking.provider.name}
+• SMS to ${booking.provider.name}
+
+The provider has been notified of your reschedule request.
+
+You will receive an email and SMS notification when ${booking.provider.name} responds to your request.`);
+
+      } catch (error) {
+        alert('Failed to send reschedule request. Please try again.');
+      }
+    }
   };
 
   const renderStars = (rating) => {

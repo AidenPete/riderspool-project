@@ -91,6 +91,17 @@ body {
   min-height: 100vh;
 }
 
+/* Text Selection */
+::selection {
+  background-color: var(--primary);
+  color: white;
+}
+
+::-moz-selection {
+  background-color: var(--primary);
+  color: white;
+}
+
 /* ===========================
    Shared Page Containers
    =========================== */

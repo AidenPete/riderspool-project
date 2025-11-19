@@ -1,21 +1,12 @@
 import { Link } from 'react-router-dom';
+import Navbar from '../components/layout/Navbar';
 import './Landing.css';
 
 function Landing() {
   return (
     <div className="landing">
       {/* Navigation */}
-      <nav className="navbar">
-        <div className="container">
-          <div className="nav-content">
-            <h1 className="logo">Riderspool</h1>
-            <div className="nav-links">
-              <Link to="/login" className="btn-text">Login</Link>
-              <Link to="/register" className="btn-primary">Get Started</Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="hero">
