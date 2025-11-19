@@ -19,6 +19,12 @@ import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import EmployerRoute from './components/EmployerRoute';
 import ProviderRoute from './components/ProviderRoute';
+import AdminRoute from './components/AdminRoute';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
+import InterviewManagement from './pages/admin/InterviewManagement';
+import VerificationManagement from './pages/admin/VerificationManagement';
 
 function App() {
   return (
@@ -114,6 +120,41 @@ function App() {
               <ProviderRoute>
                 <Settings />
               </ProviderRoute>
+            }
+          />
+
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <UserManagement />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/interviews"
+            element={
+              <AdminRoute>
+                <InterviewManagement />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/verifications"
+            element={
+              <AdminRoute>
+                <VerificationManagement />
+              </AdminRoute>
             }
           />
 
