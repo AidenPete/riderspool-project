@@ -20,7 +20,7 @@ function MyInterviews() {
         contactPerson: 'Jane Smith',
         industry: 'Construction',
       },
-      date: '2024-11-22',
+      date: '2025-01-28',
       time: '10:00 AM',
       duration: '30 minutes',
       office: {
@@ -29,7 +29,7 @@ function MyInterviews() {
       },
       status: 'pending',
       notes: 'Looking for a reliable delivery rider for daily construction site deliveries.',
-      requestedAt: '2024-11-19',
+      requestedAt: '2025-01-20',
     },
     {
       id: 2,
@@ -39,7 +39,7 @@ function MyInterviews() {
         contactPerson: 'Michael Johnson',
         industry: 'Technology',
       },
-      date: '2024-11-25',
+      date: '2025-02-03',
       time: '2:00 PM',
       duration: '45 minutes',
       office: {
@@ -48,8 +48,8 @@ function MyInterviews() {
       },
       status: 'confirmed',
       notes: 'Need a motorbike rider for equipment delivery between offices.',
-      requestedAt: '2024-11-18',
-      confirmedAt: '2024-11-18',
+      requestedAt: '2025-01-21',
+      confirmedAt: '2025-01-21',
     },
     {
       id: 3,
@@ -59,7 +59,7 @@ function MyInterviews() {
         contactPerson: 'Sarah Williams',
         industry: 'Retail',
       },
-      date: '2024-11-10',
+      date: '2025-01-10',
       time: '11:00 AM',
       duration: '30 minutes',
       office: {
@@ -68,8 +68,8 @@ function MyInterviews() {
       },
       status: 'completed',
       notes: 'Food delivery rider for our restaurant chain.',
-      requestedAt: '2024-11-05',
-      completedAt: '2024-11-10',
+      requestedAt: '2025-01-03',
+      completedAt: '2025-01-10',
       employerReview: {
         rating: 5,
         comment: 'Excellent rider! Very professional and punctual. Highly recommend.',
@@ -83,7 +83,7 @@ function MyInterviews() {
         contactPerson: 'David Brown',
         industry: 'Logistics & Transportation',
       },
-      date: '2024-11-15',
+      date: '2025-01-15',
       time: '9:00 AM',
       duration: '1 hour',
       office: {
@@ -92,8 +92,8 @@ function MyInterviews() {
       },
       status: 'declined',
       notes: 'Seeking experienced courier for long-distance deliveries.',
-      requestedAt: '2024-11-08',
-      declinedAt: '2024-11-09',
+      requestedAt: '2025-01-08',
+      declinedAt: '2025-01-09',
       declineReason: 'Schedule conflict',
     },
   ];

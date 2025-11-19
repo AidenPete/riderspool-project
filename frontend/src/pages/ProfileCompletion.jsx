@@ -18,6 +18,7 @@ function ProfileCompletion() {
     licenseDocument: null,
 
     // Personal Info
+    registeredName: '',
     dateOfBirth: '',
     gender: '',
 
@@ -223,6 +224,18 @@ function ProfileCompletion() {
           {currentSection === 'personal' && (
             <Card title="Personal Information">
               <div className="form-grid-2col">
+                <div className="form-group full-width">
+                  <label>Registered Full Name (As per ID)</label>
+                  <input
+                    type="text"
+                    name="registeredName"
+                    value={formData.registeredName}
+                    onChange={handleInputChange}
+                    placeholder="Enter your full legal name"
+                  />
+                  <small className="field-hint">This should match the name on your ID document</small>
+                </div>
+
                 <div className="form-group">
                   <label>Date of Birth</label>
                   <input

@@ -21,7 +21,7 @@ function MyBookings() {
         profilePhoto: null,
         rating: 4.8,
       },
-      date: '2024-11-22',
+      date: '2025-01-28',
       time: '10:00 AM',
       duration: '30 minutes',
       office: {
@@ -30,7 +30,7 @@ function MyBookings() {
       },
       status: 'confirmed',
       notes: 'Looking for a reliable delivery rider for daily operations.',
-      bookedAt: '2024-11-18',
+      bookedAt: '2025-01-20',
     },
     {
       id: 2,
@@ -41,7 +41,7 @@ function MyBookings() {
         profilePhoto: null,
         rating: 4.9,
       },
-      date: '2024-11-23',
+      date: '2025-02-05',
       time: '2:00 PM',
       duration: '45 minutes',
       office: {
@@ -50,7 +50,7 @@ function MyBookings() {
       },
       status: 'pending',
       notes: 'Need experienced SUV driver for corporate use.',
-      bookedAt: '2024-11-19',
+      bookedAt: '2025-01-22',
     },
     {
       id: 3,
@@ -61,7 +61,7 @@ function MyBookings() {
         profilePhoto: null,
         rating: 4.7,
       },
-      date: '2024-11-10',
+      date: '2025-01-10',
       time: '11:00 AM',
       duration: '1 hour',
       office: {
@@ -70,7 +70,7 @@ function MyBookings() {
       },
       status: 'completed',
       notes: 'Long-haul truck driver for cargo transportation.',
-      bookedAt: '2024-11-05',
+      bookedAt: '2025-01-03',
       review: {
         rating: 5,
         comment: 'Excellent driver, very professional!',
@@ -85,7 +85,7 @@ function MyBookings() {
         profilePhoto: null,
         rating: 4.6,
       },
-      date: '2024-11-08',
+      date: '2025-01-08',
       time: '9:00 AM',
       duration: '30 minutes',
       office: {
@@ -94,7 +94,7 @@ function MyBookings() {
       },
       status: 'cancelled',
       notes: 'Delivery rider for express services.',
-      bookedAt: '2024-11-02',
+      bookedAt: '2024-12-30',
       cancelReason: 'Provider no longer available',
     },
   ];

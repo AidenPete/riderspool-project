@@ -16,6 +16,10 @@ import MyBookings from './pages/MyBookings';
 import MyInterviews from './pages/MyInterviews';
 import SavedProviders from './pages/SavedProviders';
 import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
+import ProtectedRoute from './components/ProtectedRoute';
+import EmployerRoute from './components/EmployerRoute';
+import ProviderRoute from './components/ProviderRoute';
 
 function App() {
   return (
@@ -30,20 +34,93 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected Routes - Both User Types */}
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Employer Routes */}
-          <Route path="/employer/profile" element={<EmployerProfile />} />
-          <Route path="/search" element={<SearchProviders />} />
-          <Route path="/provider/:id" element={<ProviderProfile />} />
-          <Route path="/request-interview/:providerId" element={<InterviewRequest />} />
-          <Route path="/bookings" element={<MyBookings />} />
-          <Route path="/saved" element={<SavedProviders />} />
+          <Route
+            path="/employer/profile"
+            element={
+              <EmployerRoute>
+                <EmployerProfile />
+              </EmployerRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <EmployerRoute>
+                <SearchProviders />
+              </EmployerRoute>
+            }
+          />
+          <Route
+            path="/provider/:id"
+            element={
+              <EmployerRoute>
+                <ProviderProfile />
+              </EmployerRoute>
+            }
+          />
+          <Route
+            path="/request-interview/:providerId"
+            element={
+              <EmployerRoute>
+                <InterviewRequest />
+              </EmployerRoute>
+            }
+          />
+          <Route
+            path="/bookings"
+            element={
+              <EmployerRoute>
+                <MyBookings />
+              </EmployerRoute>
+            }
+          />
+          <Route
+            path="/saved"
+            element={
+              <EmployerRoute>
+                <SavedProviders />
+              </EmployerRoute>
+            }
+          />
 
           {/* Provider Routes */}
-          <Route path="/provider/profile" element={<ProfileCompletion />} />
-          <Route path="/interviews" element={<MyInterviews />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route
+            path="/provider/profile"
+            element={
+              <ProviderRoute>
+                <ProfileCompletion />
+              </ProviderRoute>
+            }
+          />
+          <Route
+            path="/interviews"
+            element={
+              <ProviderRoute>
+                <MyInterviews />
+              </ProviderRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProviderRoute>
+                <Settings />
+              </ProviderRoute>
+            }
+          />
+
+          {/* 404 Not Found */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </AuthProvider>

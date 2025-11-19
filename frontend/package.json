@@ -1,7 +1,8 @@
 {
-  "name": "frontend",
+  "name": "riderspool-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Riderspool - Connect Employers with Skilled Service Providers",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,8 +11,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.10.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^7.9.6"
   },
   "devDependencies": {

@@ -28,7 +28,7 @@ function ProviderDashboard() {
       id: 1,
       companyName: 'ABC Construction Ltd',
       industry: 'Construction',
-      date: '2024-11-20',
+      date: '2025-01-27',
       time: '10:00 AM',
       office: 'Nairobi Office',
       status: 'Confirmed',
