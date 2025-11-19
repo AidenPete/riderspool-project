@@ -6,6 +6,7 @@ import './Auth.css';
 function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [userType, setUserType] = useState('provider');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -61,12 +62,20 @@ function Login() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Mock user data - replace with actual API response
-      const mockUser = {
-        email: formData.email,
-        userType: 'provider', // This would come from the API
-        fullName: 'John Doe',
-        category: 'Motorbike Rider',
-      };
+      const mockUser = userType === 'employer'
+        ? {
+            email: formData.email,
+            userType: 'employer',
+            companyName: 'ABC Construction Ltd',
+            contactPerson: 'John Doe',
+            industry: 'Construction',
+          }
+        : {
+            email: formData.email,
+            userType: 'provider',
+            fullName: 'John Kamau',
+            category: 'Motorbike Rider',
+          };
 
       login(mockUser);
       navigate('/dashboard');
@@ -85,6 +94,24 @@ function Login() {
           <Link to="/" className="auth-logo">Riderspool</Link>
           <h2>Welcome Back</h2>
           <p>Sign in to your account</p>
+        </div>
+
+        {/* User Type Selector */}
+        <div className="user-type-selector">
+          <button
+            type="button"
+            className={`type-btn ${userType === 'employer' ? 'active' : ''}`}
+            onClick={() => setUserType('employer')}
+          >
+            I'm an Employer
+          </button>
+          <button
+            type="button"
+            className={`type-btn ${userType === 'provider' ? 'active' : ''}`}
+            onClick={() => setUserType('provider')}
+          >
+            I'm a Service Provider
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -121,7 +148,7 @@ function Login() {
               <input type="checkbox" />
               <span>Remember me</span>
             </label>
-            <a href="#forgot" className="forgot-link">Forgot password?</a>
+            <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
           </div>
 
           {errors.submit && <div className="error-message">{errors.submit}</div>}

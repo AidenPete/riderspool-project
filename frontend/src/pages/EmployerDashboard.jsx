@@ -106,6 +106,13 @@ function EmployerDashboard() {
         {/* Quick Actions */}
         <div className="quick-actions-grid">
           <Card className="action-card">
+            <h3>🏢 Company Profile</h3>
+            <p>Update company details and registration</p>
+            <Link to="/employer/profile">
+              <Button variant="secondary" fullWidth>Edit Profile</Button>
+            </Link>
+          </Card>
+          <Card className="action-card">
             <h3>🔍 Search Providers</h3>
             <p>Find qualified riders, drivers, and operators</p>
             <Link to="/search">

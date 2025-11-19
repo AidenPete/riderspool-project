@@ -162,7 +162,7 @@ function MyInterviews() {
             <h1>My Interviews</h1>
             <p>Manage your interview requests</p>
           </div>
-          <Link to="/profile">
+          <Link to="/provider/profile">
             <Button variant="primary">Update Profile</Button>
           </Link>
         </div>

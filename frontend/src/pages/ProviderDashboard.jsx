@@ -45,7 +45,7 @@ function ProviderDashboard() {
             <h1>Welcome back, {user?.fullName}!</h1>
             <p className="dashboard-subtitle">{user?.category}</p>
           </div>
-          <Link to="/profile">
+          <Link to="/provider/profile">
             <Button variant="primary">Complete Profile</Button>
           </Link>
         </div>
@@ -62,7 +62,7 @@ function ProviderDashboard() {
                   <div className="progress-fill" style={{ width: `${profileCompletion}%` }}></div>
                 </div>
               </div>
-              <Link to="/profile">
+              <Link to="/provider/profile">
                 <Button variant="primary" size="small">Complete Now</Button>
               </Link>
             </div>
@@ -96,7 +96,7 @@ function ProviderDashboard() {
                 <div key={item.id} className="task-item">
                   <span className="task-icon">{item.icon}</span>
                   <span className="task-name">{item.task}</span>
-                  <Link to="/profile">
+                  <Link to="/provider/profile">
                     <Button variant="outline" size="small">Add</Button>
                   </Link>
                 </div>
@@ -136,7 +136,7 @@ function ProviderDashboard() {
           <Card className="action-card">
             <h3>📝 Complete Profile</h3>
             <p>Add documents, photos, and experience</p>
-            <Link to="/profile">
+            <Link to="/provider/profile">
               <Button variant="secondary" fullWidth>Go to Profile</Button>
             </Link>
           </Card>

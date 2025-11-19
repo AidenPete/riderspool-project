@@ -20,9 +20,13 @@ function Navbar() {
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard" className="nav-link">Dashboard</Link>
-                <Link to="/profile" className="nav-link">Profile</Link>
-                {user?.userType === 'employer' && (
-                  <Link to="/search" className="nav-link">Find Providers</Link>
+                {user?.userType === 'employer' ? (
+                  <>
+                    <Link to="/employer/profile" className="nav-link">Company Profile</Link>
+                    <Link to="/search" className="nav-link">Find Providers</Link>
+                  </>
+                ) : (
+                  <Link to="/provider/profile" className="nav-link">My Profile</Link>
                 )}
                 <button onClick={handleLogout} className="btn-logout">
                   Logout

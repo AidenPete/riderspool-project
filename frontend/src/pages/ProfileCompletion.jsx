@@ -27,8 +27,7 @@ function ProfileCompletion() {
     willingToRelocate: false,
 
     // Professional
-    vehicleType: '',
-    yearsExperience: '',
+    vehicleExperience: [], // Array of {vehicleType, duration}
     bio: '',
 
     // Additional Skills
@@ -47,13 +46,24 @@ function ProfileCompletion() {
 
   const regions = ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika'];
   const genders = ['Male', 'Female', 'Other', 'Prefer not to say'];
-  const vehicleTypes = {
-    'Motorbike Rider': ['Honda', 'Yamaha', 'TVS', 'Bajaj', 'Other'],
-    'Car Driver': ['Sedan', 'SUV', 'Hatchback', 'Station Wagon'],
-    'Truck Driver': ['Light Truck', 'Medium Truck', 'Heavy Truck', 'Trailer'],
-    'Bus Driver': ['Mini Bus', 'Full Size Bus', 'Coach'],
-    'Machinery Operator': ['Forklift', 'Crane', 'Excavator', 'Bulldozer', 'Other'],
+
+  const allVehicleTypes = {
+    'Motorbikes': ['Honda', 'Yamaha', 'TVS', 'Bajaj', 'Suzuki', 'Other Motorbike'],
+    'Cars': ['Sedan', 'SUV', 'Hatchback', 'Station Wagon', 'Pickup'],
+    'Trucks': ['Light Truck', 'Medium Truck', 'Heavy Truck', 'Trailer Truck'],
+    'Buses': ['Mini Bus (14-seater)', 'Medium Bus (25-seater)', 'Full Size Bus (50+ seater)', 'Tour Coach'],
+    'Machinery': ['Forklift', 'Crane', 'Excavator', 'Bulldozer', 'Grader', 'Loader', 'Other Machinery'],
   };
+
+  const durationOptions = [
+    'Less than 6 months',
+    '6 months - 1 year',
+    '1 - 2 years',
+    '2 - 3 years',
+    '3 - 5 years',
+    '5 - 10 years',
+    '10+ years',
+  ];
 
   const skillSuggestions = [
     'First Aid',
@@ -95,6 +105,31 @@ function ProfileCompletion() {
     setFormData(prev => ({
       ...prev,
       additionalSkills: prev.additionalSkills.filter(s => s !== skill)
+    }));
+  };
+
+  const addVehicleExperience = (vehicleType) => {
+    if (!formData.vehicleExperience.find(v => v.vehicleType === vehicleType)) {
+      setFormData(prev => ({
+        ...prev,
+        vehicleExperience: [...prev.vehicleExperience, { vehicleType, duration: '' }]
+      }));
+    }
+  };
+
+  const removeVehicleExperience = (vehicleType) => {
+    setFormData(prev => ({
+      ...prev,
+      vehicleExperience: prev.vehicleExperience.filter(v => v.vehicleType !== vehicleType)
+    }));
+  };
+
+  const updateVehicleDuration = (vehicleType, duration) => {
+    setFormData(prev => ({
+      ...prev,
+      vehicleExperience: prev.vehicleExperience.map(v =>
+        v.vehicleType === vehicleType ? { ...v, duration } : v
+      )
     }));
   };
 
@@ -255,36 +290,53 @@ function ProfileCompletion() {
           {/* Professional Section */}
           {currentSection === 'professional' && (
             <Card title="Professional Details">
-              <div className="form-grid-2col">
-                <div className="form-group">
-                  <label>Vehicle/Equipment Type</label>
-                  <select
-                    name="vehicleType"
-                    value={formData.vehicleType}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select type...</option>
-                    {vehicleTypes[user?.category]?.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="form-group">
+                <label>Vehicles/Machines Experience</label>
+                <p className="field-description">Select all vehicles or machines you have experience with and specify the duration</p>
+              </div>
 
-                <div className="form-group">
-                  <label>Years of Experience</label>
-                  <select
-                    name="yearsExperience"
-                    value={formData.yearsExperience}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select experience...</option>
-                    <option value="0-1">Less than 1 year</option>
-                    <option value="1-3">1-3 years</option>
-                    <option value="3-5">3-5 years</option>
-                    <option value="5-10">5-10 years</option>
-                    <option value="10+">10+ years</option>
-                  </select>
-                </div>
+              {/* Vehicle/Machine Experience Grid */}
+              <div className="vehicle-experience-section">
+                {Object.entries(allVehicleTypes).map(([category, types]) => (
+                  <div key={category} className="vehicle-category">
+                    <h4 className="category-title">{category}</h4>
+                    <div className="vehicle-options">
+                      {types.map(type => {
+                        const isSelected = formData.vehicleExperience.find(v => v.vehicleType === type);
+                        return (
+                          <div key={type} className="vehicle-option">
+                            <label className="vehicle-checkbox">
+                              <input
+                                type="checkbox"
+                                checked={!!isSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    addVehicleExperience(type);
+                                  } else {
+                                    removeVehicleExperience(type);
+                                  }
+                                }}
+                              />
+                              <span>{type}</span>
+                            </label>
+                            {isSelected && (
+                              <select
+                                className="duration-select"
+                                value={isSelected.duration}
+                                onChange={(e) => updateVehicleDuration(type, e.target.value)}
+                              >
+                                <option value="">Select duration...</option>
+                                {durationOptions.map(duration => (
+                                  <option key={duration} value={duration}>{duration}</option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="form-group">
