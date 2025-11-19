@@ -1,0 +1,16 @@
+/* Interview Management - Reuses user management styles */
+.interview-management {
+  width: 100%;
+}
+
+.status-confirmed {
+  background: var(--success-light);
+  color: var(--success-dark);
+  border: 1px solid var(--success);
+}
+
+.status-completed {
+  background: var(--info-light);
+  color: var(--info-dark);
+  border: 1px solid var(--info);
+}
