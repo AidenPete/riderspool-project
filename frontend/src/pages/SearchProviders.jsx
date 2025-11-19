@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../features/auth/authSlice';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import ProviderCard from '../components/search/ProviderCard';
 import './SearchProviders.css';
 
 function SearchProviders() {
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
 
   const [filters, setFilters] = useState({
     category: '',

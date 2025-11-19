@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectUser, updateUser } from '../features/auth/authSlice';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -8,7 +9,8 @@ import FileUpload from '../components/common/FileUpload';
 import './ProfileCompletion.css';
 
 function ProfileCompletion() {
-  const { user, updateUser } = useAuth();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -143,10 +145,10 @@ function ProfileCompletion() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Update user data
-      updateUser({
+      dispatch(updateUser({
         ...formData,
         profileCompleted: true,
-      });
+      }));
 
       alert('Profile updated successfully!');
       navigate('/dashboard');

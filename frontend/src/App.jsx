@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
 import './App.css';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -23,9 +22,8 @@ import ProviderRoute from './components/ProviderRoute';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
+    <Router>
+      <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -123,7 +121,6 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
-    </AuthProvider>
   );
 }
 

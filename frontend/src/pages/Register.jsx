@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useDispatch } from 'react-redux';
+import { login } from '../features/auth/authSlice';
 import './Auth.css';
 
 function Register() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const userType = searchParams.get('type') || 'provider';
 
@@ -163,7 +164,7 @@ function Register() {
       delete newUser.password;
       delete newUser.confirmPassword;
 
-      login(newUser);
+      dispatch(login(newUser));
       navigate('/dashboard');
 
     } catch (error) {

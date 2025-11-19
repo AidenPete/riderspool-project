@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../features/auth/authSlice';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -9,7 +10,7 @@ import './InterviewRequest.css';
 function InterviewRequest() {
   const { providerId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
 
   // Mock provider data
   const provider = {

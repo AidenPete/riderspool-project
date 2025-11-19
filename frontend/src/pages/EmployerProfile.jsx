@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectUser, updateUser } from '../features/auth/authSlice';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -9,7 +10,8 @@ import './ProfileCompletion.css';
 
 function EmployerProfile() {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
   const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -121,12 +123,12 @@ function EmployerProfile() {
       console.log('Employer profile updated:', formData);
 
       // Update user context
-      updateUser({
+      dispatch(updateUser({
         ...user,
         companyName: formData.companyName,
         industry: formData.industry,
         profileComplete: true,
-      });
+      }));
 
       alert('Profile updated successfully!');
       navigate('/dashboard');

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../features/auth/authSlice';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import './MyBookings.css';
 
 function MyBookings() {
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
   const [activeTab, setActiveTab] = useState('upcoming');
 
   // Mock bookings data

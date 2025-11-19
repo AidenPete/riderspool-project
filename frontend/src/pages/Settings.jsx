@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectUser, updateUser } from '../features/auth/authSlice';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import './Settings.css';
 
 function Settings() {
-  const { user, updateUser } = useAuth();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
   const [activeSection, setActiveSection] = useState('account');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -84,11 +86,11 @@ function Settings() {
       console.log('Settings updated:', formData);
 
       // Update user context if needed
-      updateUser({
+      dispatch(updateUser({
         ...user,
         email: formData.email,
         phone: formData.phone,
-      });
+      }));
 
       alert('Settings saved successfully!');
     } catch (error) {

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useDispatch } from 'react-redux';
+import { login } from '../features/auth/authSlice';
 import './Auth.css';
 
 function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const dispatch = useDispatch();
   const [userType, setUserType] = useState('provider');
   const [formData, setFormData] = useState({
     email: '',
@@ -61,23 +62,37 @@ function Login() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Mock user data - replace with actual API response
-      const mockUser = userType === 'employer'
-        ? {
-            email: formData.email,
-            userType: 'employer',
-            companyName: 'ABC Construction Ltd',
-            contactPerson: 'John Doe',
-            industry: 'Construction',
-          }
-        : {
-            email: formData.email,
-            userType: 'provider',
-            fullName: 'John Kamau',
-            category: 'Motorbike Rider',
-          };
+      // Check if user exists in localStorage from previous registration
+      let userData = null;
+      const storedUser = localStorage.getItem('riderspool_user');
 
-      login(mockUser);
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        // If stored user matches email and userType, use their data
+        if (parsedUser.email === formData.email && parsedUser.userType === userType) {
+          userData = parsedUser;
+        }
+      }
+
+      // If no stored user found, use mock data for testing
+      if (!userData) {
+        userData = userType === 'employer'
+          ? {
+              email: formData.email,
+              userType: 'employer',
+              companyName: 'ABC Construction Ltd',
+              contactPerson: 'John Doe',
+              industry: 'Construction',
+            }
+          : {
+              email: formData.email,
+              userType: 'provider',
+              fullName: 'John Kamau',
+              category: 'Motorbike Rider',
+            };
+      }
+
+      dispatch(login(userData));
       navigate('/dashboard');
 
     } catch (error) {

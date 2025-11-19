@@ -1,10 +1,12 @@
-import { useAuth } from '../context/AuthContext';
+import { useSelector } from 'react-redux';
+import { selectUser, selectIsAuthenticated } from '../features/auth/authSlice';
 import { Navigate } from 'react-router-dom';
 import EmployerDashboard from './EmployerDashboard';
 import ProviderDashboard from './ProviderDashboard';
 
 function Dashboard() {
-  const { user, isAuthenticated } = useAuth();
+  const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectUser, selectIsAuthenticated, logout } from '../../features/auth/authSlice';
 import './Navbar.css';
 
 function Navbar() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
   const handleLogout = () => {
-    logout();
+    dispatch(logout());
     window.location.href = '/';
   };
 
