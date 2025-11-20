@@ -53,6 +53,8 @@ class InterviewSerializer(serializers.ModelSerializer):
 
 class InterviewCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating interview requests"""
+    provider_id = serializers.IntegerField()
+    officeLocation_id = serializers.IntegerField()
 
     class Meta:
         model = Interview

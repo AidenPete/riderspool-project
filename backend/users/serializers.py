@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, ProviderProfile, SavedProvider
+from .models import User, ProviderProfile, EmployerProfile, SavedProvider
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -129,6 +129,45 @@ class ProviderListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user', 'registeredName', 'category', 'experience',
             'rating', 'totalInterviews', 'availability', 'profilePhoto'
+        ]
+
+
+class EmployerProfileSerializer(serializers.ModelSerializer):
+    """Serializer for EmployerProfile model"""
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = EmployerProfile
+        fields = [
+            'id', 'user', 'companyName', 'industry', 'contactPerson',
+            'phone', 'website', 'companySize', 'description',
+            'registrationNumber', 'registrationCertificate',
+            'officeAddress', 'region', 'city', 'postalCode',
+            'createdAt', 'updatedAt'
+        ]
+        read_only_fields = ['id', 'user', 'createdAt', 'updatedAt']
+
+
+class EmployerProfileCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating/updating employer profile"""
+
+    # Make all fields optional for partial updates
+    companyName = serializers.CharField(required=False, allow_blank=True)
+    industry = serializers.CharField(required=False, allow_blank=True)
+    contactPerson = serializers.CharField(required=False, allow_blank=True)
+    phone = serializers.CharField(required=False, allow_blank=True)
+    registrationNumber = serializers.CharField(required=False, allow_blank=True)
+    officeAddress = serializers.CharField(required=False, allow_blank=True)
+    region = serializers.CharField(required=False, allow_blank=True)
+    city = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = EmployerProfile
+        fields = [
+            'companyName', 'industry', 'contactPerson', 'phone',
+            'website', 'companySize', 'description',
+            'registrationNumber', 'registrationCertificate',
+            'officeAddress', 'region', 'city', 'postalCode'
         ]
 
 

@@ -212,8 +212,12 @@ function ProfileCompletion() {
       }));
 
       alert('Profile updated successfully!');
-      // Don't navigate away, stay on page to show updated status
-      // navigate('/dashboard');
+
+      // Check if profile is now complete, if so switch to view mode
+      const newCompletion = calculateProfileCompletion(result);
+      if (newCompletion === 100) {
+        setIsEditMode(false);
+      }
     } catch (error) {
       console.error('Profile update error:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to update profile. Please try again.';
@@ -553,7 +557,7 @@ function ProfileCompletion() {
               {isLoading ? 'Saving...' : 'Save & Complete Profile'}
             </Button>
           </div>
-        </form>
+          </form>
         ) : (
           /* View Mode - Display Profile */
           <div className="profile-view-mode">

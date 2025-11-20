@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     RegisterView, LoginView, LogoutView, CurrentUserView,
     ChangePasswordView, UserViewSet, ProviderProfileViewSet,
-    SavedProviderViewSet
+    EmployerProfileViewSet, SavedProviderViewSet
 )
 from .admin_views import admin_dashboard_stats, admin_interview_analytics
 
@@ -13,6 +13,7 @@ from .admin_views import admin_dashboard_stats, admin_interview_analytics
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'providers', ProviderProfileViewSet, basename='provider')
+router.register(r'employers', EmployerProfileViewSet, basename='employer')
 router.register(r'saved-providers', SavedProviderViewSet, basename='saved-provider')
 
 urlpatterns = [

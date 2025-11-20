@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, ProviderProfile, SavedProvider
+from .models import User, ProviderProfile, EmployerProfile, SavedProvider
 
 
 @admin.register(User)
@@ -34,6 +34,14 @@ class ProviderProfileAdmin(admin.ModelAdmin):
     list_display = ['user', 'category', 'experience', 'availability', 'rating', 'totalInterviews']
     list_filter = ['category', 'availability', 'createdAt']
     search_fields = ['user__fullName', 'user__email', 'registeredName', 'idNumber', 'licenseNumber']
+    readonly_fields = ['createdAt', 'updatedAt']
+
+
+@admin.register(EmployerProfile)
+class EmployerProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'companyName', 'industry', 'region', 'city', 'createdAt']
+    list_filter = ['industry', 'region', 'createdAt']
+    search_fields = ['user__fullName', 'user__email', 'companyName', 'registrationNumber']
     readonly_fields = ['createdAt', 'updatedAt']
 
 

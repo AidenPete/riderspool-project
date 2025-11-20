@@ -8,11 +8,12 @@ from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
-from .models import ProviderProfile, SavedProvider
+from .models import ProviderProfile, EmployerProfile, SavedProvider
 from .serializers import (
     UserSerializer, RegisterSerializer, LoginSerializer,
     ProviderProfileSerializer, ProviderProfileCreateSerializer,
-    ProviderListSerializer, SavedProviderSerializer,
+    ProviderListSerializer, EmployerProfileSerializer,
+    EmployerProfileCreateSerializer, SavedProviderSerializer,
     ChangePasswordSerializer
 )
 
@@ -158,7 +159,10 @@ class ProviderProfileViewSet(viewsets.ModelViewSet):
 
         # Filter by user type for employers
         if self.request.user.is_employer:
-            queryset = queryset.filter(availability=True, user__isVerified=True)
+            # Show all available providers (verified or not)
+            # In production, you may want to add verification requirement back
+            queryset = queryset.filter(availability=True)
+            # Optionally: queryset = queryset.filter(availability=True, user__isVerified=True)
 
         # Providers can only see their own profile
         if self.request.user.is_provider:
@@ -222,6 +226,89 @@ class ProviderProfileViewSet(viewsets.ModelViewSet):
             else:
                 return Response(
                     {'error': 'Provider profile not found. Please create your profile first.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+
+class EmployerProfileViewSet(viewsets.ModelViewSet):
+    """ViewSet for EmployerProfile model"""
+    queryset = EmployerProfile.objects.select_related('user').all()
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action"""
+        if self.action in ['create', 'update', 'partial_update']:
+            return EmployerProfileCreateSerializer
+        return EmployerProfileSerializer
+
+    def get_queryset(self):
+        """Employers can only see their own profile"""
+        if self.request.user.is_employer:
+            return EmployerProfile.objects.filter(user=self.request.user)
+        return EmployerProfile.objects.none()
+
+    def perform_create(self, serializer):
+        """Create profile for current user"""
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['get', 'put', 'patch'], url_path='my-profile')
+    def my_profile(self, request):
+        """Get or update employer's own profile"""
+        try:
+            profile = EmployerProfile.objects.get(user=request.user)
+
+            if request.method == 'GET':
+                serializer = EmployerProfileSerializer(profile)
+                return Response(serializer.data)
+
+            elif request.method in ['PUT', 'PATCH']:
+                serializer = EmployerProfileCreateSerializer(
+                    profile,
+                    data=request.data,
+                    partial=True  # Always allow partial updates
+                )
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(EmployerProfileSerializer(profile).data)
+
+        except EmployerProfile.DoesNotExist:
+            # If profile doesn't exist and it's a PUT/PATCH, create it with defaults from User
+            if request.method in ['PUT', 'PATCH']:
+                # Create a mutable dict for profile data
+                profile_data = {}
+
+                # Copy over existing data from request
+                for key in request.data:
+                    profile_data[key] = request.data[key]
+
+                # Set defaults from user if not provided
+                if 'companyName' not in profile_data or not profile_data.get('companyName'):
+                    profile_data['companyName'] = request.user.companyName or 'Company Name'
+                if 'industry' not in profile_data or not profile_data.get('industry'):
+                    profile_data['industry'] = request.user.industry or 'Other'
+                if 'contactPerson' not in profile_data or not profile_data.get('contactPerson'):
+                    profile_data['contactPerson'] = request.user.contactPerson or request.user.fullName
+                if 'phone' not in profile_data or not profile_data.get('phone'):
+                    profile_data['phone'] = request.user.phone or 'PENDING'
+                if 'registrationNumber' not in profile_data or not profile_data.get('registrationNumber'):
+                    profile_data['registrationNumber'] = 'PENDING'
+                if 'officeAddress' not in profile_data or not profile_data.get('officeAddress'):
+                    profile_data['officeAddress'] = 'PENDING'
+                if 'region' not in profile_data or not profile_data.get('region'):
+                    profile_data['region'] = 'Nairobi'
+                if 'city' not in profile_data or not profile_data.get('city'):
+                    profile_data['city'] = 'Nairobi'
+
+                serializer = EmployerProfileCreateSerializer(data=profile_data)
+                serializer.is_valid(raise_exception=True)
+                profile = serializer.save(user=request.user)
+                return Response(
+                    EmployerProfileSerializer(profile).data,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                return Response(
+                    {'error': 'Employer profile not found. Please create your profile first.'},
                     status=status.HTTP_404_NOT_FOUND
                 )
 

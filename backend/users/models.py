@@ -137,6 +137,51 @@ class ProviderProfile(models.Model):
         return f"{self.user.fullName} - {self.get_category_display()}"
 
 
+class EmployerProfile(models.Model):
+    """Extended profile for employers/companies"""
+
+    COMPANY_SIZE_CHOICES = [
+        ('1-10', '1-10 employees'),
+        ('11-50', '11-50 employees'),
+        ('51-200', '51-200 employees'),
+        ('201-500', '201-500 employees'),
+        ('500+', '500+ employees'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employer_profile')
+
+    # Company details
+    companyName = models.CharField(max_length=255, help_text='Official company name')
+    industry = models.CharField(max_length=100)
+    contactPerson = models.CharField(max_length=255)
+    phone = models.CharField(max_length=20)
+    website = models.URLField(blank=True, null=True)
+    companySize = models.CharField(max_length=20, choices=COMPANY_SIZE_CHOICES, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+
+    # Business registration
+    registrationNumber = models.CharField(max_length=100)
+    registrationCertificate = models.FileField(upload_to='documents/certificates/', blank=True, null=True)
+
+    # Office location
+    officeAddress = models.TextField()
+    region = models.CharField(max_length=100)
+    city = models.CharField(max_length=100)
+    postalCode = models.CharField(max_length=20, blank=True, null=True)
+
+    # Timestamps
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'employer_profiles'
+        verbose_name = 'Employer Profile'
+        verbose_name_plural = 'Employer Profiles'
+
+    def __str__(self):
+        return f"{self.companyName} - {self.industry}"
+
+
 class SavedProvider(models.Model):
     """Model for employers to save favorite providers"""
 
