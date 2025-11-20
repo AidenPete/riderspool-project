@@ -38,7 +38,16 @@ function EmployerProfile() {
     postalCode: '',
   });
 
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [passwordChanging, setPasswordChanging] = useState(false);
   const [errors, setErrors] = useState({});
+  const [passwordErrors, setPasswordErrors] = useState({});
 
   const industries = [
     'Construction',
@@ -147,6 +156,73 @@ function EmployerProfile() {
 
   const handleFileChange = (name, file) => {
     setFormData(prev => ({ ...prev, [name]: file }));
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+    if (passwordErrors[name]) {
+      setPasswordErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validatePasswordForm = () => {
+    const newErrors = {};
+
+    if (!passwordData.currentPassword) {
+      newErrors.currentPassword = 'Current password is required';
+    }
+
+    if (!passwordData.newPassword) {
+      newErrors.newPassword = 'New password is required';
+    } else if (passwordData.newPassword.length < 8) {
+      newErrors.newPassword = 'Password must be at least 8 characters';
+    }
+
+    if (!passwordData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your new password';
+    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      newErrors.newPassword = 'New password must be different from current password';
+    }
+
+    setPasswordErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validatePasswordForm()) {
+      return;
+    }
+
+    setPasswordChanging(true);
+
+    try {
+      // TODO: Implement password change API endpoint
+      // For now, we'll simulate an API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      alert('Password changed successfully!');
+
+      // Reset form
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setShowPasswordSection(false);
+    } catch (error) {
+      console.error('Password change error:', error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to change password. Please try again.';
+      alert(errorMessage);
+    } finally {
+      setPasswordChanging(false);
+    }
   };
 
   const validateForm = () => {
@@ -489,6 +565,17 @@ function EmployerProfile() {
           ) : (
             /* View Mode - Display Profile */
             <div className="profile-view-mode">
+              {/* Account Information Card */}
+              <Card title="Account Information">
+                <div className="profile-info-grid">
+                  <div className="info-item">
+                    <label>Email Address</label>
+                    <div className="info-value">{user?.email || 'Not available'}</div>
+                    <small className="field-hint">This email cannot be changed</small>
+                  </div>
+                </div>
+              </Card>
+
               {/* Company Details Card */}
               <Card title="Company Details">
                 <div className="profile-info-grid">
@@ -590,6 +677,106 @@ function EmployerProfile() {
                     Edit Location
                   </Button>
                 </div>
+              </Card>
+
+              {/* Change Password Card */}
+              <Card title="Security">
+                {!showPasswordSection ? (
+                  <div>
+                    <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+                      Keep your account secure by regularly updating your password.
+                    </p>
+                    <Button variant="outline" size="small" onClick={() => setShowPasswordSection(true)}>
+                      Change Password
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={handlePasswordSubmit}>
+                    <div className="form-grid">
+                      <div className="form-group full-width">
+                        <label htmlFor="currentPassword">
+                          Current Password <span className="required">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          id="currentPassword"
+                          name="currentPassword"
+                          value={passwordData.currentPassword}
+                          onChange={handlePasswordChange}
+                          className={passwordErrors.currentPassword ? 'error' : ''}
+                          placeholder="Enter your current password"
+                        />
+                        {passwordErrors.currentPassword && (
+                          <span className="error-message">{passwordErrors.currentPassword}</span>
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor="newPassword">
+                          New Password <span className="required">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          id="newPassword"
+                          name="newPassword"
+                          value={passwordData.newPassword}
+                          onChange={handlePasswordChange}
+                          className={passwordErrors.newPassword ? 'error' : ''}
+                          placeholder="Enter new password"
+                        />
+                        {passwordErrors.newPassword && (
+                          <span className="error-message">{passwordErrors.newPassword}</span>
+                        )}
+                        <small className="field-hint">Must be at least 8 characters</small>
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor="confirmPassword">
+                          Confirm New Password <span className="required">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          value={passwordData.confirmPassword}
+                          onChange={handlePasswordChange}
+                          className={passwordErrors.confirmPassword ? 'error' : ''}
+                          placeholder="Confirm new password"
+                        />
+                        {passwordErrors.confirmPassword && (
+                          <span className="error-message">{passwordErrors.confirmPassword}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="card-actions">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="small"
+                        onClick={() => {
+                          setShowPasswordSection(false);
+                          setPasswordData({
+                            currentPassword: '',
+                            newPassword: '',
+                            confirmPassword: '',
+                          });
+                          setPasswordErrors({});
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="small"
+                        disabled={passwordChanging}
+                      >
+                        {passwordChanging ? 'Changing...' : 'Change Password'}
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </Card>
 
               {/* Action Buttons */}

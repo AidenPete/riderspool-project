@@ -60,6 +60,24 @@ class InterviewCreateSerializer(serializers.ModelSerializer):
         model = Interview
         fields = ['provider_id', 'date', 'time', 'officeLocation_id', 'notes']
 
+    def validate(self, attrs):
+        """Validate interview data"""
+        from django.utils import timezone
+        from datetime import datetime, timedelta
+
+        # Validate date is not in the past (with 1 hour tolerance for timezone issues)
+        interview_date = attrs.get('date')
+        interview_time = attrs.get('time')
+
+        if interview_date and interview_time:
+            interview_datetime = datetime.combine(interview_date, interview_time)
+            # Allow booking up to 1 hour in the past to account for timezone differences
+            min_datetime = (timezone.now() - timedelta(hours=1)).replace(tzinfo=None)
+            if interview_datetime < min_datetime:
+                raise serializers.ValidationError({"date": "Cannot book interviews in the past"})
+
+        return attrs
+
     def create(self, validated_data):
         """Create interview with employer from context"""
         employer = self.context['request'].user

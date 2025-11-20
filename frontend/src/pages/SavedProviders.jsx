@@ -10,53 +10,68 @@ import './SavedProviders.css';
 function SavedProviders() {
   const user = useSelector(selectUser);
 
-  // Mock saved providers
+  // Mock saved providers - matching backend API structure
   const mockSavedProviders = [
     {
       id: 1,
-      fullName: 'John Kamau',
-      category: 'Motorbike Rider',
+      registeredName: 'John Kamau',
+      user: {
+        id: 1,
+        fullName: 'John Kamau',
+        email: 'john@example.com',
+      },
+      category: 'motorbike-rider',
       profilePhoto: null,
       rating: 4.8,
       totalInterviews: 15,
       location: 'Nairobi',
-      experience: '5 years',
+      yearsOfExperience: 5,
       vehicleType: 'Honda',
       bio: 'Experienced delivery rider with excellent knowledge of Nairobi routes.',
       skills: ['First Aid', 'Navigation Expert', 'Customer Service'],
-      verified: true,
+      availability: true,
       isSaved: true,
       savedAt: '2024-11-15',
     },
     {
       id: 2,
-      fullName: 'Mary Wanjiku',
-      category: 'Car Driver',
+      registeredName: 'Mary Wanjiku',
+      user: {
+        id: 2,
+        fullName: 'Mary Wanjiku',
+        email: 'mary@example.com',
+      },
+      category: 'car-driver',
       profilePhoto: null,
       rating: 4.9,
       totalInterviews: 23,
       location: 'Nairobi',
-      experience: '8 years',
+      yearsOfExperience: 8,
       vehicleType: 'SUV',
       bio: 'Professional driver with clean driving record.',
       skills: ['First Aid', 'Multiple Languages', 'Vehicle Maintenance'],
-      verified: true,
+      availability: true,
       isSaved: true,
       savedAt: '2024-11-18',
     },
     {
       id: 6,
-      fullName: 'Susan Njeri',
-      category: 'Car Driver',
+      registeredName: 'Susan Njeri',
+      user: {
+        id: 6,
+        fullName: 'Susan Njeri',
+        email: 'susan@example.com',
+      },
+      category: 'car-driver',
       profilePhoto: null,
       rating: 5.0,
       totalInterviews: 42,
       location: 'Nairobi',
-      experience: '10 years',
+      yearsOfExperience: 10,
       vehicleType: 'Sedan',
       bio: 'Executive driver with impeccable record. Specializing in corporate transport.',
       skills: ['Multiple Languages', 'First Aid', 'Professional Etiquette', 'Tour Guide'],
-      verified: true,
+      availability: true,
       isSaved: true,
       savedAt: '2024-11-12',
     },
@@ -79,7 +94,7 @@ function SavedProviders() {
       case 'rating':
         return b.rating - a.rating;
       case 'name':
-        return a.fullName.localeCompare(b.fullName);
+        return (a.registeredName || a.user?.fullName || '').localeCompare(b.registeredName || b.user?.fullName || '');
       default:
         return 0;
     }
