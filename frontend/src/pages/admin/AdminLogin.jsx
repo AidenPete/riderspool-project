@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { login } from '../../features/auth/authSlice';
+import { loginUser } from '../../features/auth/authSlice';
 import './AdminLogin.css';
 
 function AdminLogin() {
@@ -59,32 +59,16 @@ function AdminLogin() {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Use the real API login
+      await dispatch(loginUser({
+        email: formData.email,
+        password: formData.password,
+      })).unwrap();
 
-      // Mock admin credentials (in production, validate against backend)
-      if (formData.email === 'admin@riderspool.com' && formData.password === 'admin123') {
-        const adminData = {
-          id: 'admin-1',
-          email: formData.email,
-          userType: 'admin',
-          fullName: 'Riderspool Administrator',
-          role: 'super_admin',
-        };
-
-        // Save to localStorage
-        localStorage.setItem('riderspool_user', JSON.stringify(adminData));
-
-        // Dispatch to Redux
-        dispatch(login(adminData));
-
-        // Navigate to admin dashboard
-        navigate('/admin/dashboard');
-      } else {
-        setErrors({ submit: 'Invalid credentials. Please contact system administrator.' });
-      }
+      // Navigate to admin dashboard
+      navigate('/admin/dashboard');
     } catch (error) {
-      setErrors({ submit: 'Login failed. Please try again.' });
+      setErrors({ submit: 'Invalid credentials. Please contact system administrator.' });
     } finally {
       setIsLoading(false);
     }

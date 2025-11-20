@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectUser, selectIsAuthenticated, logout } from '../../features/auth/authSlice';
+import { selectUser, selectIsAuthenticated, logoutUser } from '../../features/auth/authSlice';
+import { providersAPI } from '../../api';
 import './Navbar.css';
 
 function Navbar() {
@@ -10,13 +11,34 @@ function Navbar() {
   const user = useSelector(selectUser);
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(null);
   const dropdownRef = useRef(null);
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser());
     setDropdownOpen(false);
     navigate('/'); // Redirect to landing page
   };
+
+  // Fetch profile photo for providers
+  useEffect(() => {
+    const fetchProfilePhoto = async () => {
+      if (user?.userType === 'provider') {
+        try {
+          const profile = await providersAPI.getMyProfile();
+          if (profile?.profilePhoto) {
+            setProfilePhoto(profile.profilePhoto);
+          }
+        } catch (error) {
+          console.log('No profile photo found');
+        }
+      }
+    };
+
+    if (isAuthenticated && user?.userType === 'provider') {
+      fetchProfilePhoto();
+    }
+  }, [user, isAuthenticated]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -96,7 +118,11 @@ function Navbar() {
                     aria-label="Profile menu"
                   >
                     <div className="avatar">
-                      {getInitials()}
+                      {profilePhoto ? (
+                        <img src={profilePhoto} alt="Profile" className="avatar-image" />
+                      ) : (
+                        getInitials()
+                      )}
                     </div>
                     <span className="profile-name">{getDisplayName()}</span>
                     <svg
@@ -115,7 +141,11 @@ function Navbar() {
                       <div className="dropdown-header">
                         <div className="dropdown-user-info">
                           <div className="avatar-large">
-                            {getInitials()}
+                            {profilePhoto ? (
+                              <img src={profilePhoto} alt="Profile" className="avatar-image" />
+                            ) : (
+                              getInitials()
+                            )}
                           </div>
                           <div>
                             <div className="dropdown-name">{getDisplayName()}</div>

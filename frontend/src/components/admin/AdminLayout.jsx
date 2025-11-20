@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { selectUser, logout } from '../../features/auth/authSlice';
+import { selectUser, logoutUser } from '../../features/auth/authSlice';
 import './AdminLayout.css';
 
 function AdminLayout({ children }) {
@@ -13,7 +13,7 @@ function AdminLayout({ children }) {
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {
-      dispatch(logout());
+      dispatch(logoutUser());
       navigate('/admin/login');
     }
   };

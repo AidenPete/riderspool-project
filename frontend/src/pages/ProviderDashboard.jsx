@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
+import { providersAPI } from '../api';
+import { calculateProfileCompletion, getPendingTasks } from '../utils/profileCompletion';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -8,21 +11,33 @@ import './Dashboard.css';
 
 function ProviderDashboard() {
   const user = useSelector(selectUser);
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - will be replaced with API calls
-  const profileCompletion = 45; // percentage
   const stats = {
-    upcomingInterviews: 2,
-    totalInterviews: 15,
-    profileViews: 48,
+    upcomingInterviews: 0,
+    totalInterviews: profileData?.totalInterviews || 0,
+    profileViews: 0,
   };
 
-  const pendingTasks = [
-    { id: 1, task: 'Upload ID Document', icon: '🆔' },
-    { id: 2, task: 'Upload Driver\'s License', icon: '📄' },
-    { id: 3, task: 'Add Profile Photo', icon: '📸' },
-    { id: 4, task: 'Complete Work Experience', icon: '💼' },
-  ];
+  // Fetch profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await providersAPI.getMyProfile();
+        setProfileData(data);
+      } catch (error) {
+        console.log('No profile found');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const profileCompletion = calculateProfileCompletion(profileData);
+  const pendingTasks = getPendingTasks(profileData).slice(0, 4); // Show top 4 tasks
 
   const upcomingInterviews = [
     {
@@ -46,9 +61,11 @@ function ProviderDashboard() {
             <h1>Welcome back, {user?.fullName}!</h1>
             <p className="dashboard-subtitle">{user?.category}</p>
           </div>
-          <Link to="/provider/profile">
-            <Button variant="primary">Complete Profile</Button>
-          </Link>
+          {profileCompletion < 100 && (
+            <Link to="/provider/profile">
+              <Button variant="primary">Complete Profile</Button>
+            </Link>
+          )}
         </div>
 
         {/* Profile Completion Alert */}

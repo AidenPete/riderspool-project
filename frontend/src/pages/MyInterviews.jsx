@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
+import { interviewsAPI } from '../api';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -10,8 +11,30 @@ import './MyInterviews.css';
 function MyInterviews() {
   const user = useSelector(selectUser);
   const [activeTab, setActiveTab] = useState('pending');
+  const [interviews, setInterviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock interviews data
+  // Fetch interviews from API
+  useEffect(() => {
+    const fetchInterviews = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await interviewsAPI.getInterviews();
+        setInterviews(response.results || response);
+      } catch (err) {
+        console.error('Error fetching interviews:', err);
+        setError('Failed to load interviews');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInterviews();
+  }, []);
+
+  // Mock interviews data (fallback)
   const mockInterviews = [
     {
       id: 1,
@@ -98,8 +121,6 @@ function MyInterviews() {
       declineReason: 'Schedule conflict',
     },
   ];
-
-  const [interviews] = useState(mockInterviews);
 
   const tabs = [
     { id: 'pending', label: 'Pending', count: interviews.filter(i => i.status === 'pending').length },

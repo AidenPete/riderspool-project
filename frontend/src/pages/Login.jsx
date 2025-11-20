@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { login } from '../features/auth/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser, selectLoading, selectError, clearError } from '../features/auth/authSlice';
 import './Auth.css';
 
 function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [userType, setUserType] = useState('provider');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = useSelector(selectLoading);
+  const apiError = useSelector(selectError);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,56 +49,27 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Clear any previous API errors
+    dispatch(clearError());
+
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    setIsLoading(true);
-
-    // TODO: Replace with actual API call
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Dispatch the loginUser async thunk
+      await dispatch(loginUser({
+        email: formData.email,
+        password: formData.password,
+      })).unwrap();
 
-      // Check if user exists in localStorage from previous registration
-      let userData = null;
-      const storedUser = localStorage.getItem('riderspool_user');
-
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        // If stored user matches email and userType, use their data
-        if (parsedUser.email === formData.email && parsedUser.userType === userType) {
-          userData = parsedUser;
-        }
-      }
-
-      // If no stored user found, use mock data for testing
-      if (!userData) {
-        userData = userType === 'employer'
-          ? {
-              email: formData.email,
-              userType: 'employer',
-              companyName: 'ABC Construction Ltd',
-              contactPerson: 'John Doe',
-              industry: 'Construction',
-            }
-          : {
-              email: formData.email,
-              userType: 'provider',
-              fullName: 'John Kamau',
-              category: 'Motorbike Rider',
-            };
-      }
-
-      dispatch(login(userData));
+      // If successful, navigate to dashboard
       navigate('/dashboard');
-
     } catch (error) {
-      setErrors({ submit: 'Login failed. Please try again.' });
-    } finally {
-      setIsLoading(false);
+      // Error is handled by Redux, but we can set local error message if needed
+      console.error('Login failed:', error);
     }
   };
 
@@ -109,24 +80,6 @@ function Login() {
           <Link to="/" className="auth-logo">Riderspool</Link>
           <h2>Welcome Back</h2>
           <p>Sign in to your account</p>
-        </div>
-
-        {/* User Type Selector */}
-        <div className="user-type-selector">
-          <button
-            type="button"
-            className={`type-btn ${userType === 'employer' ? 'active' : ''}`}
-            onClick={() => setUserType('employer')}
-          >
-            I'm an Employer
-          </button>
-          <button
-            type="button"
-            className={`type-btn ${userType === 'provider' ? 'active' : ''}`}
-            onClick={() => setUserType('provider')}
-          >
-            I'm a Service Provider
-          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -166,7 +119,13 @@ function Login() {
             <Link to="/forgot-password" className="forgot-link">Forgot password?</Link>
           </div>
 
-          {errors.submit && <div className="error-message">{errors.submit}</div>}
+          {apiError && (
+            <div className="error-message">
+              {typeof apiError === 'string'
+                ? apiError
+                : apiError.detail || apiError.message || 'Login failed. Please try again.'}
+            </div>
+          )}
 
           <button
             type="submit"

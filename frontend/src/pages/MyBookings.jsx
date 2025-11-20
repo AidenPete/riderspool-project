@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
+import { interviewsAPI } from '../api';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -10,8 +11,30 @@ import './MyBookings.css';
 function MyBookings() {
   const user = useSelector(selectUser);
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock bookings data
+  // Fetch interviews from API
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await interviewsAPI.getInterviews();
+        setBookings(response.results || response);
+      } catch (err) {
+        console.error('Error fetching bookings:', err);
+        setError('Failed to load bookings');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  // Mock bookings data (fallback)
   const mockBookings = [
     {
       id: 1,
@@ -99,8 +122,6 @@ function MyBookings() {
       cancelReason: 'Provider no longer available',
     },
   ];
-
-  const [bookings] = useState(mockBookings);
 
   const tabs = [
     { id: 'upcoming', label: 'Upcoming', count: bookings.filter(b => ['confirmed', 'pending'].includes(b.status)).length },

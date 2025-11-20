@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { login } from '../features/auth/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { registerUser, selectLoading, selectError, clearError } from '../features/auth/authSlice';
 import './Auth.css';
 
 function Register() {
@@ -24,9 +24,11 @@ function Register() {
     // Provider fields
     fullName: '',
     category: '',
+    experience: '',
   });
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = useSelector(selectLoading);
+  const apiError = useSelector(selectError);
 
   const industries = [
     'Construction',
@@ -45,11 +47,9 @@ function Register() {
   ];
 
   const providerCategories = [
-    'Motorbike Rider',
-    'Car Driver',
-    'Truck Driver',
-    'Bus Driver',
-    'Machinery Operator',
+    { value: 'motorbike-rider', label: 'Motorbike Rider' },
+    { value: 'car-driver', label: 'Car Driver' },
+    { value: 'truck-driver', label: 'Truck Driver' },
   ];
 
   const handleChange = (e) => {
@@ -77,6 +77,7 @@ function Register() {
       industry: '',
       fullName: '',
       category: '',
+      experience: '',
     }));
     setErrors({});
   };
@@ -107,6 +108,12 @@ function Register() {
 
       if (!formData.category) {
         newErrors.category = 'Please select a category';
+      }
+
+      if (!formData.experience) {
+        newErrors.experience = 'Years of experience is required';
+      } else if (isNaN(formData.experience) || formData.experience < 0) {
+        newErrors.experience = 'Please enter a valid number';
       }
     }
 
@@ -141,36 +148,48 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Clear any previous API errors
+    dispatch(clearError());
+
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    setIsLoading(true);
-
-    // TODO: Replace with actual API call
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Create user object from form data
-      const newUser = {
-        ...formData,
-        id: Date.now(), // Mock ID
+      // Prepare the registration data according to the API spec
+      const registrationData = {
+        email: formData.email,
+        password: formData.password,
+        password2: formData.confirmPassword,
+        userType: formData.userType,
+        phone: formData.phone,
       };
 
-      // Remove password fields before storing
-      delete newUser.password;
-      delete newUser.confirmPassword;
+      // Add employer-specific fields
+      if (formData.userType === 'employer') {
+        registrationData.fullName = formData.contactPerson; // Use contact person as full name
+        registrationData.companyName = formData.companyName;
+        registrationData.contactPerson = formData.contactPerson;
+        registrationData.industry = formData.industry;
+      }
 
-      dispatch(login(newUser));
+      // Add provider-specific fields
+      if (formData.userType === 'provider') {
+        registrationData.fullName = formData.fullName;
+        registrationData.category = formData.category;
+        registrationData.experience = parseInt(formData.experience);
+      }
+
+      // Dispatch the registerUser async thunk
+      await dispatch(registerUser(registrationData)).unwrap();
+
+      // If successful, navigate to dashboard
       navigate('/dashboard');
-
     } catch (error) {
-      setErrors({ submit: 'Registration failed. Please try again.' });
-    } finally {
-      setIsLoading(false);
+      // Error is handled by Redux
+      console.error('Registration failed:', error);
     }
   };
 
@@ -279,10 +298,25 @@ function Register() {
                 >
                   <option value="">Select category...</option>
                   {providerCategories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
                   ))}
                 </select>
                 {errors.category && <span className="error-message">{errors.category}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="experience">Years of Experience</label>
+                <input
+                  type="number"
+                  id="experience"
+                  name="experience"
+                  value={formData.experience}
+                  onChange={handleChange}
+                  className={errors.experience ? 'error' : ''}
+                  placeholder="e.g., 3"
+                  min="0"
+                />
+                {errors.experience && <span className="error-message">{errors.experience}</span>}
               </div>
             </>
           )}
@@ -366,7 +400,13 @@ function Register() {
             </label>
           </div>
 
-          {errors.submit && <div className="error-message">{errors.submit}</div>}
+          {apiError && (
+            <div className="error-message">
+              {typeof apiError === 'string'
+                ? apiError
+                : apiError.detail || apiError.message || 'Registration failed. Please try again.'}
+            </div>
+          )}
 
           <button
             type="submit"

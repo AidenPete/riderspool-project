@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { selectUser, updateUser } from '../features/auth/authSlice';
+import { useSelector } from 'react-redux';
+import { selectUser } from '../features/auth/authSlice';
+import { providersAPI } from '../api';
+import { calculateProfileCompletion } from '../utils/profileCompletion';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -9,7 +11,6 @@ import FileUpload from '../components/common/FileUpload';
 import './ProfileCompletion.css';
 
 function ProfileCompletion() {
-  const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const navigate = useNavigate();
 
@@ -19,54 +20,27 @@ function ProfileCompletion() {
     idDocument: null,
     licenseDocument: null,
 
-    // Personal Info
+    // Essential Info
     registeredName: '',
-    dateOfBirth: '',
-    gender: '',
-
-    // Location
-    region: '',
-    city: '',
-    willingToRelocate: false,
-
-    // Professional
-    vehicleExperience: [], // Array of {vehicleType, duration}
+    idNumber: '',
+    licenseNumber: '',
     bio: '',
 
-    // Additional Skills
+    // Skills
     additionalSkills: [],
-
-    // Work Experience
-    workExperience: [],
-
-    // Certifications
-    certifications: [],
   });
 
   const [currentSection, setCurrentSection] = useState('documents');
   const [newSkill, setNewSkill] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const regions = ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika'];
-  const genders = ['Male', 'Female', 'Other', 'Prefer not to say'];
-
-  const allVehicleTypes = {
-    'Motorbikes': ['Honda', 'Yamaha', 'TVS', 'Bajaj', 'Suzuki', 'Other Motorbike'],
-    'Cars': ['Sedan', 'SUV', 'Hatchback', 'Station Wagon', 'Pickup'],
-    'Trucks': ['Light Truck', 'Medium Truck', 'Heavy Truck', 'Trailer Truck'],
-    'Buses': ['Mini Bus (14-seater)', 'Medium Bus (25-seater)', 'Full Size Bus (50+ seater)', 'Tour Coach'],
-    'Machinery': ['Forklift', 'Crane', 'Excavator', 'Bulldozer', 'Grader', 'Loader', 'Other Machinery'],
-  };
-
-  const durationOptions = [
-    'Less than 6 months',
-    '6 months - 1 year',
-    '1 - 2 years',
-    '2 - 3 years',
-    '3 - 5 years',
-    '5 - 10 years',
-    '10+ years',
-  ];
+  const [uploadedDocs, setUploadedDocs] = useState({
+    profilePhoto: false,
+    idDocument: false,
+    licenseDocument: false
+  });
+  const [profileData, setProfileData] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const skillSuggestions = [
     'First Aid',
@@ -77,7 +51,68 @@ function ProfileCompletion() {
     'Navigation Expert',
     'Vehicle Maintenance',
     'Customer Service',
+    'GPS Navigation',
+    'Route Planning',
   ];
+
+  // Fetch existing profile data on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await providersAPI.getMyProfile();
+        setProfileData(data);
+
+        // Mark documents as uploaded if they exist
+        setUploadedDocs({
+          profilePhoto: !!data.profilePhoto,
+          idDocument: !!data.idDocument,
+          licenseDocument: !!data.licenseDocument
+        });
+
+        // Pre-fill form data
+        if (data.registeredName) setFormData(prev => ({ ...prev, registeredName: data.registeredName }));
+        if (data.idNumber) setFormData(prev => ({ ...prev, idNumber: data.idNumber }));
+        if (data.licenseNumber) setFormData(prev => ({ ...prev, licenseNumber: data.licenseNumber }));
+        if (data.bio) setFormData(prev => ({ ...prev, bio: data.bio }));
+        if (data.skills) {
+          const skillsArray = data.skills.split(',').map(s => s.trim());
+          setFormData(prev => ({ ...prev, additionalSkills: skillsArray }));
+        }
+
+        // Check if profile is complete - if yes, show view mode
+        const completion = calculateProfileCompletion(data);
+        if (completion === 100) {
+          setIsEditMode(false);
+        } else {
+          setIsEditMode(true);
+        }
+      } catch (error) {
+        console.log('No existing profile found, starting fresh');
+        setIsEditMode(true); // New profile, start in edit mode
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  // Calculate profile completion percentage using shared utility
+  const calculateCompletion = () => {
+    return calculateProfileCompletion(
+      {
+        ...profileData,
+        registeredName: formData.registeredName || profileData?.registeredName,
+        idNumber: formData.idNumber || profileData?.idNumber,
+        licenseNumber: formData.licenseNumber || profileData?.licenseNumber,
+        bio: formData.bio || profileData?.bio,
+        skills: formData.additionalSkills.length > 0
+          ? formData.additionalSkills.join(', ')
+          : profileData?.skills,
+      },
+      uploadedDocs
+    );
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -92,6 +127,15 @@ function ProfileCompletion() {
       ...prev,
       [field]: file
     }));
+  };
+
+  const handleRemoveFile = (field) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: null
+    }));
+    // Note: This only removes from local state, not from server
+    // To remove from server, you'd need to make an API call
   };
 
   const addSkill = (skill) => {
@@ -111,49 +155,69 @@ function ProfileCompletion() {
     }));
   };
 
-  const addVehicleExperience = (vehicleType) => {
-    if (!formData.vehicleExperience.find(v => v.vehicleType === vehicleType)) {
-      setFormData(prev => ({
-        ...prev,
-        vehicleExperience: [...prev.vehicleExperience, { vehicleType, duration: '' }]
-      }));
-    }
-  };
-
-  const removeVehicleExperience = (vehicleType) => {
-    setFormData(prev => ({
-      ...prev,
-      vehicleExperience: prev.vehicleExperience.filter(v => v.vehicleType !== vehicleType)
-    }));
-  };
-
-  const updateVehicleDuration = (vehicleType, duration) => {
-    setFormData(prev => ({
-      ...prev,
-      vehicleExperience: prev.vehicleExperience.map(v =>
-        v.vehicleType === vehicleType ? { ...v, duration } : v
-      )
-    }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Create FormData for file uploads
+      const formDataToSend = new FormData();
 
-      // Update user data
-      dispatch(updateUser({
-        ...formData,
-        profileCompleted: true,
+      // Add files if they exist
+      if (formData.profilePhoto) {
+        formDataToSend.append('profilePhoto', formData.profilePhoto);
+      }
+      if (formData.idDocument) {
+        formDataToSend.append('idDocument', formData.idDocument);
+      }
+      if (formData.licenseDocument) {
+        formDataToSend.append('licenseDocument', formData.licenseDocument);
+      }
+
+      // Add text fields
+      if (formData.registeredName) formDataToSend.append('registeredName', formData.registeredName);
+      if (formData.bio) formDataToSend.append('bio', formData.bio);
+      if (formData.idNumber) formDataToSend.append('idNumber', formData.idNumber);
+      if (formData.licenseNumber) formDataToSend.append('licenseNumber', formData.licenseNumber);
+
+      // Add skills as comma-separated string
+      if (formData.additionalSkills && formData.additionalSkills.length > 0) {
+        formDataToSend.append('skills', formData.additionalSkills.join(', '));
+      }
+
+      // Add category and experience from user data
+      formDataToSend.append('category', user.category || '');
+      formDataToSend.append('experience', user.experience || 0);
+      formDataToSend.append('availability', true);
+
+      // Send to API using FormData
+      const result = await providersAPI.updateMyProfile(formDataToSend);
+
+      // Update profile data with server response
+      setProfileData(result);
+
+      // Update uploaded docs status
+      setUploadedDocs({
+        profilePhoto: !!result.profilePhoto,
+        idDocument: !!result.idDocument,
+        licenseDocument: !!result.licenseDocument
+      });
+
+      // Clear the local file selections after successful upload
+      setFormData(prev => ({
+        ...prev,
+        profilePhoto: null,
+        idDocument: null,
+        licenseDocument: null
       }));
 
       alert('Profile updated successfully!');
-      navigate('/dashboard');
+      // Don't navigate away, stay on page to show updated status
+      // navigate('/dashboard');
     } catch (error) {
-      alert('Failed to update profile. Please try again.');
+      console.error('Profile update error:', error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to update profile. Please try again.';
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -161,10 +225,20 @@ function ProfileCompletion() {
 
   const sections = [
     { id: 'documents', label: 'Documents', icon: '📄' },
-    { id: 'personal', label: 'Personal Info', icon: '👤' },
-    { id: 'professional', label: 'Professional', icon: '💼' },
-    { id: 'skills', label: 'Skills', icon: '⭐' },
+    { id: 'information', label: 'Information', icon: '👤' },
+    { id: 'professional', label: 'Bio & Skills', icon: '⭐' },
   ];
+
+  if (loading) {
+    return (
+      <div className="profile-page">
+        <Navbar />
+        <div className="profile-container">
+          <div className="loading-message">Loading profile...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="profile-page">
@@ -172,269 +246,294 @@ function ProfileCompletion() {
 
       <div className="profile-container">
         <div className="profile-header">
-          <h1>Complete Your Profile</h1>
-          <p>Help employers find you by completing your profile</p>
+          {/* Profile Photo Preview */}
+          <div className="profile-photo-preview">
+            {(formData.profilePhoto || profileData?.profilePhoto) ? (
+              <img
+                src={formData.profilePhoto ? URL.createObjectURL(formData.profilePhoto) : profileData?.profilePhoto}
+                alt="Profile"
+                className="profile-avatar-large"
+              />
+            ) : (
+              <div className="profile-avatar-placeholder">
+                {user?.fullName?.charAt(0).toUpperCase() || 'P'}
+              </div>
+            )}
+          </div>
+
+          <h1>{isEditMode ? 'Complete Your Profile' : 'My Profile'}</h1>
+          <p>{isEditMode ? 'Help employers find you by completing your profile' : 'View and manage your professional profile'}</p>
+
+          {!isEditMode && (
+            <div className="profile-actions-header">
+              <Button variant="primary" onClick={() => setIsEditMode(true)}>
+                Edit Profile
+              </Button>
+            </div>
+          )}
+
+          {/* Profile Completion Progress */}
+          <div className="profile-progress">
+            <div className="progress-header">
+              <span className="progress-label">Profile Completion</span>
+              <span className="progress-percentage">{calculateCompletion()}%</span>
+            </div>
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{ width: `${calculateCompletion()}%` }}
+              ></div>
+            </div>
+            {calculateCompletion() < 100 && (
+              <p className="progress-hint">
+                Complete all sections to increase your chances of getting interview requests!
+              </p>
+            )}
+            {calculateCompletion() === 100 && (
+              <p className="progress-success">
+                ✓ Your profile is complete! You're more likely to get interview requests.
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Section Tabs */}
-        <div className="section-tabs">
-          {sections.map(section => (
-            <button
-              key={section.id}
-              className={`section-tab ${currentSection === section.id ? 'active' : ''}`}
-              onClick={() => setCurrentSection(section.id)}
-            >
-              <span className="tab-icon">{section.icon}</span>
-              <span className="tab-label">{section.label}</span>
-            </button>
-          ))}
-        </div>
+        {/* Section Tabs - Only show in edit mode */}
+        {isEditMode && (
+          <div className="section-tabs">
+            {sections.map(section => (
+              <button
+                key={section.id}
+                className={`section-tab ${currentSection === section.id ? 'active' : ''}`}
+                onClick={() => setCurrentSection(section.id)}
+              >
+                <span className="tab-icon">{section.icon}</span>
+                <span className="tab-label">{section.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit}>
+        {isEditMode ? (
+          <form onSubmit={handleSubmit}>
           {/* Documents Section */}
           {currentSection === 'documents' && (
             <Card title="Upload Documents">
               <div className="form-grid">
-                <FileUpload
-                  label="Profile Photo"
-                  accept="image/*"
-                  value={formData.profilePhoto}
-                  onChange={(file) => handleFileUpload('profilePhoto', file)}
-                  helperText="Upload a professional photo (JPG, PNG - Max 5MB)"
-                />
+                <div className="document-upload-wrapper">
+                  <FileUpload
+                    label="Profile Photo"
+                    accept="image/*"
+                    value={formData.profilePhoto}
+                    onChange={(file) => handleFileUpload('profilePhoto', file)}
+                    helperText="Upload a professional photo (JPG, PNG - Max 5MB)"
+                  />
+                  {(uploadedDocs.profilePhoto || formData.profilePhoto) && (
+                    <div className="upload-status-actions">
+                      <div className="upload-status success">
+                        <span className="status-icon">✓</span>
+                        <span className="status-text">Uploaded</span>
+                      </div>
+                      {formData.profilePhoto && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile('profilePhoto')}
+                          className="btn-remove"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
 
-                <FileUpload
-                  label="National ID / Passport"
-                  accept="image/*,application/pdf"
-                  value={formData.idDocument}
-                  onChange={(file) => handleFileUpload('idDocument', file)}
-                  helperText="Clear photo of your ID (JPG, PNG, PDF - Max 5MB)"
-                />
+                <div className="document-upload-wrapper">
+                  <FileUpload
+                    label="National ID / Passport"
+                    accept="image/*,application/pdf"
+                    value={formData.idDocument}
+                    onChange={(file) => handleFileUpload('idDocument', file)}
+                    helperText="Clear photo of your ID (JPG, PNG, PDF - Max 5MB)"
+                  />
+                  {(uploadedDocs.idDocument || formData.idDocument) && (
+                    <div className="upload-status-actions">
+                      <div className="upload-status success">
+                        <span className="status-icon">✓</span>
+                        <span className="status-text">Uploaded</span>
+                      </div>
+                      {formData.idDocument && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile('idDocument')}
+                          className="btn-remove"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
 
-                <FileUpload
-                  label="Driver's License"
-                  accept="image/*,application/pdf"
-                  value={formData.licenseDocument}
-                  onChange={(file) => handleFileUpload('licenseDocument', file)}
-                  helperText="Valid driver's license (JPG, PNG, PDF - Max 5MB)"
-                />
+                <div className="document-upload-wrapper">
+                  <FileUpload
+                    label="Driver's License"
+                    accept="image/*,application/pdf"
+                    value={formData.licenseDocument}
+                    onChange={(file) => handleFileUpload('licenseDocument', file)}
+                    helperText="Valid driver's license (JPG, PNG, PDF - Max 5MB)"
+                  />
+                  {(uploadedDocs.licenseDocument || formData.licenseDocument) && (
+                    <div className="upload-status-actions">
+                      <div className="upload-status success">
+                        <span className="status-icon">✓</span>
+                        <span className="status-text">Uploaded</span>
+                      </div>
+                      {formData.licenseDocument && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile('licenseDocument')}
+                          className="btn-remove"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </Card>
           )}
 
-          {/* Personal Info Section */}
-          {currentSection === 'personal' && (
-            <Card title="Personal Information">
+          {/* Information Section */}
+          {currentSection === 'information' && (
+            <Card title="Essential Information">
               <div className="form-grid-2col">
                 <div className="form-group full-width">
-                  <label>Registered Full Name (As per ID)</label>
+                  <label>Registered Full Name (As per ID) *</label>
                   <input
                     type="text"
                     name="registeredName"
                     value={formData.registeredName}
                     onChange={handleInputChange}
                     placeholder="Enter your full legal name"
+                    required
                   />
                   <small className="field-hint">This should match the name on your ID document</small>
                 </div>
 
                 <div className="form-group">
-                  <label>Date of Birth</label>
-                  <input
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Gender</label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select gender...</option>
-                    {genders.map(g => (
-                      <option key={g} value={g}>{g}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>Region</label>
-                  <select
-                    name="region"
-                    value={formData.region}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select region...</option>
-                    {regions.map(r => (
-                      <option key={r} value={r}>{r}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>City</label>
+                  <label>National ID Number *</label>
                   <input
                     type="text"
-                    name="city"
-                    value={formData.city}
+                    name="idNumber"
+                    value={formData.idNumber}
                     onChange={handleInputChange}
-                    placeholder="Enter your city"
+                    placeholder="Enter your ID number"
+                    required
                   />
                 </div>
-              </div>
 
-              <div className="form-group">
-                <label className="checkbox-label">
+                <div className="form-group">
+                  <label>Driver's License Number *</label>
                   <input
-                    type="checkbox"
-                    name="willingToRelocate"
-                    checked={formData.willingToRelocate}
+                    type="text"
+                    name="licenseNumber"
+                    value={formData.licenseNumber}
                     onChange={handleInputChange}
+                    placeholder="Enter your license number"
+                    required
                   />
-                  <span>Willing to relocate for work</span>
-                </label>
+                </div>
               </div>
             </Card>
           )}
 
-          {/* Professional Section */}
+          {/* Professional Section - Bio & Skills Combined */}
           {currentSection === 'professional' && (
-            <Card title="Professional Details">
-              <div className="form-group">
-                <label>Vehicles/Machines Experience</label>
-                <p className="field-description">Select all vehicles or machines you have experience with and specify the duration</p>
-              </div>
-
-              {/* Vehicle/Machine Experience Grid */}
-              <div className="vehicle-experience-section">
-                {Object.entries(allVehicleTypes).map(([category, types]) => (
-                  <div key={category} className="vehicle-category">
-                    <h4 className="category-title">{category}</h4>
-                    <div className="vehicle-options">
-                      {types.map(type => {
-                        const isSelected = formData.vehicleExperience.find(v => v.vehicleType === type);
-                        return (
-                          <div key={type} className="vehicle-option">
-                            <label className="vehicle-checkbox">
-                              <input
-                                type="checkbox"
-                                checked={!!isSelected}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    addVehicleExperience(type);
-                                  } else {
-                                    removeVehicleExperience(type);
-                                  }
-                                }}
-                              />
-                              <span>{type}</span>
-                            </label>
-                            {isSelected && (
-                              <select
-                                className="duration-select"
-                                value={isSelected.duration}
-                                onChange={(e) => updateVehicleDuration(type, e.target.value)}
-                              >
-                                <option value="">Select duration...</option>
-                                {durationOptions.map(duration => (
-                                  <option key={duration} value={duration}>{duration}</option>
-                                ))}
-                              </select>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="form-group">
-                <label>Professional Bio</label>
-                <textarea
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleInputChange}
-                  rows="4"
-                  placeholder="Tell employers about your experience, skills, and what makes you a great fit..."
-                />
-              </div>
-            </Card>
-          )}
-
-          {/* Skills Section */}
-          {currentSection === 'skills' && (
-            <Card title="Additional Skills">
-              <div className="skills-section">
-                <p className="section-description">
-                  Add any additional skills that make you stand out
-                </p>
-
-                <div className="skill-input-group">
-                  <input
-                    type="text"
-                    value={newSkill}
-                    onChange={(e) => setNewSkill(e.target.value)}
-                    placeholder="Type a skill..."
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addSkill(newSkill);
-                      }
-                    }}
+            <>
+              <Card title="Professional Bio">
+                <div className="form-group">
+                  <label>Tell Employers About Yourself</label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    rows="5"
+                    placeholder="Describe your experience, skills, reliability, and what makes you a great service provider..."
                   />
-                  <Button
-                    type="button"
-                    onClick={() => addSkill(newSkill)}
-                    variant="primary"
-                    size="small"
-                  >
-                    Add
-                  </Button>
+                  <small className="field-hint">
+                    Tip: Mention your years of experience, types of vehicles/machines you've operated,
+                    and any special achievements or certifications
+                  </small>
                 </div>
+              </Card>
 
-                <div className="skill-suggestions">
-                  <p>Suggested skills:</p>
-                  <div className="suggestion-chips">
-                    {skillSuggestions.map(skill => (
-                      <button
-                        key={skill}
-                        type="button"
-                        className="suggestion-chip"
-                        onClick={() => addSkill(skill)}
-                      >
-                        + {skill}
-                      </button>
-                    ))}
+              <Card title="Additional Skills">
+                <div className="skills-section">
+                  <p className="section-description">
+                    Add any additional skills that make you stand out to employers
+                  </p>
+
+                  <div className="skill-input-group">
+                    <input
+                      type="text"
+                      value={newSkill}
+                      onChange={(e) => setNewSkill(e.target.value)}
+                      placeholder="Type a skill..."
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addSkill(newSkill);
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => addSkill(newSkill)}
+                      variant="primary"
+                      size="small"
+                    >
+                      Add
+                    </Button>
                   </div>
-                </div>
 
-                {formData.additionalSkills.length > 0 && (
-                  <div className="selected-skills">
-                    <p>Your skills:</p>
-                    <div className="skill-chips">
-                      {formData.additionalSkills.map(skill => (
-                        <div key={skill} className="skill-chip">
-                          {skill}
-                          <button
-                            type="button"
-                            onClick={() => removeSkill(skill)}
-                            className="remove-chip"
-                          >
-                            ✕
-                          </button>
-                        </div>
+                  <div className="skill-suggestions">
+                    <p>Suggested skills:</p>
+                    <div className="suggestion-chips">
+                      {skillSuggestions.map(skill => (
+                        <button
+                          key={skill}
+                          type="button"
+                          className="suggestion-chip"
+                          onClick={() => addSkill(skill)}
+                        >
+                          + {skill}
+                        </button>
                       ))}
                     </div>
                   </div>
-                )}
-              </div>
-            </Card>
+
+                  {formData.additionalSkills.length > 0 && (
+                    <div className="selected-skills">
+                      <p>Your skills:</p>
+                      <div className="skill-chips">
+                        {formData.additionalSkills.map(skill => (
+                          <div key={skill} className="skill-chip">
+                            {skill}
+                            <button
+                              type="button"
+                              onClick={() => removeSkill(skill)}
+                              className="remove-chip"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </>
           )}
 
           {/* Form Actions */}
@@ -455,6 +554,116 @@ function ProfileCompletion() {
             </Button>
           </div>
         </form>
+        ) : (
+          /* View Mode - Display Profile */
+          <div className="profile-view-mode">
+            {/* Documents Card */}
+            <Card title="Documents">
+              <div className="profile-info-grid">
+                <div className="info-item">
+                  <label>Profile Photo</label>
+                  <div className="doc-status">
+                    {profileData?.profilePhoto ? (
+                      <span className="status-badge verified">✓ Uploaded</span>
+                    ) : (
+                      <span className="status-badge pending">Not uploaded</span>
+                    )}
+                  </div>
+                </div>
+                <div className="info-item">
+                  <label>National ID / Passport</label>
+                  <div className="doc-status">
+                    {profileData?.idDocument ? (
+                      <span className="status-badge verified">✓ Uploaded</span>
+                    ) : (
+                      <span className="status-badge pending">Not uploaded</span>
+                    )}
+                  </div>
+                </div>
+                <div className="info-item">
+                  <label>Driver's License</label>
+                  <div className="doc-status">
+                    {profileData?.licenseDocument ? (
+                      <span className="status-badge verified">✓ Uploaded</span>
+                    ) : (
+                      <span className="status-badge pending">Not uploaded</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="card-actions">
+                <Button variant="outline" size="small" onClick={() => { setIsEditMode(true); setCurrentSection('documents'); }}>
+                  Edit Documents
+                </Button>
+              </div>
+            </Card>
+
+            {/* Information Card */}
+            <Card title="Essential Information">
+              <div className="profile-info-grid">
+                <div className="info-item">
+                  <label>Registered Full Name</label>
+                  <div className="info-value">{profileData?.registeredName || 'Not provided'}</div>
+                </div>
+                <div className="info-item">
+                  <label>National ID Number</label>
+                  <div className="info-value">{profileData?.idNumber || 'Not provided'}</div>
+                </div>
+                <div className="info-item">
+                  <label>Driver's License Number</label>
+                  <div className="info-value">{profileData?.licenseNumber || 'Not provided'}</div>
+                </div>
+              </div>
+              <div className="card-actions">
+                <Button variant="outline" size="small" onClick={() => { setIsEditMode(true); setCurrentSection('information'); }}>
+                  Edit Information
+                </Button>
+              </div>
+            </Card>
+
+            {/* Professional Bio Card */}
+            <Card title="Professional Bio">
+              <div className={`bio-text ${!profileData?.bio ? 'empty' : ''}`}>
+                {profileData?.bio || 'No bio provided yet'}
+              </div>
+              <div className="card-actions">
+                <Button variant="outline" size="small" onClick={() => { setIsEditMode(true); setCurrentSection('professional'); }}>
+                  Edit Bio
+                </Button>
+              </div>
+            </Card>
+
+            {/* Skills Card */}
+            <Card title="Skills & Expertise">
+              {profileData?.skills ? (
+                <div className="skill-chips">
+                  {profileData.skills.split(',').map((skill, index) => (
+                    <div key={index} className="skill-chip view-mode">
+                      {skill.trim()}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="bio-text empty">No skills added yet</p>
+              )}
+              <div className="card-actions">
+                <Button variant="outline" size="small" onClick={() => { setIsEditMode(true); setCurrentSection('professional'); }}>
+                  Edit Skills
+                </Button>
+              </div>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="profile-view-actions">
+              <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                Back to Dashboard
+              </Button>
+              <Button variant="primary" onClick={() => setIsEditMode(true)}>
+                Edit Profile
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
