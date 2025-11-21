@@ -119,14 +119,29 @@ function InterviewRequest() {
     setIsLoading(true);
 
     try {
+      // Convert 12-hour time to 24-hour format
+      const convert12to24 = (time12) => {
+        const [time, modifier] = time12.split(' ');
+        let [hours, minutes] = time.split(':');
+
+        if (hours === '12') {
+          hours = '00';
+        }
+
+        if (modifier === 'PM') {
+          hours = parseInt(hours, 10) + 12;
+        }
+
+        return `${hours}:${minutes}`;
+      };
+
       // Prepare interview request data for API
       const interviewData = {
-        provider: parseInt(providerId),
+        provider_id: parseInt(providerId),
         date: formData.date,
-        time: formData.time,
-        officeLocation: parseInt(formData.officeLocation),
+        time: convert12to24(formData.time),
+        officeLocation_id: parseInt(formData.officeLocation),
         notes: formData.notes,
-        duration: parseInt(formData.duration),
       };
 
       // Create interview request via API

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUser, updateUser } from '../features/auth/authSlice';
+import { authAPI } from '../api';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -20,7 +21,7 @@ function Settings() {
     newPassword: '',
     confirmPassword: '',
 
-    // Availability
+    // Availability (providers only)
     workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
     workingHours: { start: '08:00', end: '17:00' },
     availableWeekends: false,
@@ -32,7 +33,7 @@ function Settings() {
     interviewAlerts: true,
     marketingEmails: false,
 
-    // Location
+    // Location (providers only)
     preferredRegions: [],
     willingToRelocate: false,
     maxTravelDistance: '50',
@@ -41,12 +42,18 @@ function Settings() {
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const regions = ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika', 'Malindi', 'Kitale'];
 
-  const sections = [
-    { id: 'account', label: 'Account', icon: '👤' },
-    { id: 'availability', label: 'Availability', icon: '📅' },
-    { id: 'notifications', label: 'Notifications', icon: '🔔' },
-    { id: 'location', label: 'Location', icon: '📍' },
-  ];
+  // Sections based on user type
+  const sections = user?.userType === 'provider'
+    ? [
+        { id: 'account', label: 'Account', icon: '👤' },
+        { id: 'availability', label: 'Availability', icon: '📅' },
+        { id: 'notifications', label: 'Notifications', icon: '🔔' },
+        { id: 'location', label: 'Location', icon: '📍' },
+      ]
+    : [
+        { id: 'account', label: 'Account', icon: '👤' },
+        { id: 'notifications', label: 'Notifications', icon: '🔔' },
+      ];
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -79,21 +86,53 @@ function Settings() {
     setIsSaving(true);
 
     try {
-      // TODO: Replace with actual API call
-      // PUT /api/settings
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Handle password change separately if passwords are provided
+      if (formData.currentPassword && formData.newPassword && formData.confirmPassword) {
+        if (formData.newPassword !== formData.confirmPassword) {
+          alert('New passwords do not match');
+          setIsSaving(false);
+          return;
+        }
 
-      console.log('Settings updated:', formData);
+        try {
+          await authAPI.changePassword({
+            old_password: formData.currentPassword,
+            new_password: formData.newPassword,
+            new_password2: formData.confirmPassword,
+          });
 
-      // Update user context if needed
-      dispatch(updateUser({
-        ...user,
-        email: formData.email,
-        phone: formData.phone,
-      }));
+          // Clear password fields
+          setFormData(prev => ({
+            ...prev,
+            currentPassword: '',
+            newPassword: '',
+            confirmPassword: '',
+          }));
+
+          alert('Password changed successfully!');
+        } catch (error) {
+          const errorMessage = error.response?.data?.old_password ||
+                              error.response?.data?.new_password ||
+                              error.response?.data?.message ||
+                              'Failed to change password';
+          alert(errorMessage);
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      // Update other settings (phone, availability, notifications, etc.)
+      if (formData.phone !== user?.phone) {
+        await authAPI.updateCurrentUser({ phone: formData.phone });
+        dispatch(updateUser({ ...user, phone: formData.phone }));
+      }
+
+      // TODO: Save other settings (availability, notifications, location preferences)
+      // These would go to a separate settings endpoint if needed
 
       alert('Settings saved successfully!');
     } catch (error) {
+      console.error('Settings save error:', error);
       alert('Failed to save settings. Please try again.');
     } finally {
       setIsSaving(false);

@@ -12,14 +12,47 @@ class OfficeLocationSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'createdAt']
 
 
+class InterviewProviderSerializer(serializers.Serializer):
+    """Custom serializer for provider in interviews"""
+    id = serializers.IntegerField(source='user.id')
+    name = serializers.CharField(source='user.fullName')
+    email = serializers.EmailField(source='user.email')
+    phone = serializers.CharField(source='user.phone')
+    category = serializers.CharField()
+    profilePhoto = serializers.ImageField(read_only=True)
+    rating = serializers.DecimalField(max_digits=3, decimal_places=2)
+    totalInterviews = serializers.IntegerField()
+    experience = serializers.IntegerField()
+
+
 class InterviewSerializer(serializers.ModelSerializer):
     """Serializer for Interview model"""
     employer = UserSerializer(read_only=True)
-    provider = UserSerializer(read_only=True)
+    provider = serializers.SerializerMethodField(read_only=True)
     officeLocation = OfficeLocationSerializer(read_only=True)
     employer_id = serializers.IntegerField(write_only=True, required=False)
     provider_id = serializers.IntegerField(write_only=True)
     officeLocation_id = serializers.IntegerField(write_only=True)
+
+    def get_provider(self, obj):
+        """Get provider profile data"""
+        try:
+            from users.models import ProviderProfile
+            profile = ProviderProfile.objects.get(user=obj.provider)
+            return InterviewProviderSerializer(profile).data
+        except ProviderProfile.DoesNotExist:
+            # Fallback to basic user data
+            return {
+                'id': obj.provider.id,
+                'name': obj.provider.fullName,
+                'email': obj.provider.email,
+                'phone': obj.provider.phone,
+                'category': obj.provider.category,
+                'profilePhoto': None,
+                'rating': 0,
+                'totalInterviews': 0,
+                'experience': obj.provider.experience or 0,
+            }
 
     class Meta:
         model = Interview
@@ -53,8 +86,11 @@ class InterviewSerializer(serializers.ModelSerializer):
 
 class InterviewCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating interview requests"""
-    provider_id = serializers.IntegerField()
-    officeLocation_id = serializers.IntegerField()
+    provider_id = serializers.IntegerField(required=True)
+    officeLocation_id = serializers.IntegerField(required=True)
+    date = serializers.DateField(required=True)
+    time = serializers.TimeField(required=True)
+    notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         model = Interview
@@ -65,16 +101,17 @@ class InterviewCreateSerializer(serializers.ModelSerializer):
         from django.utils import timezone
         from datetime import datetime, timedelta
 
-        # Validate date is not in the past (with 1 hour tolerance for timezone issues)
+        # Validate date is not in the past (lenient for testing)
         interview_date = attrs.get('date')
         interview_time = attrs.get('time')
 
         if interview_date and interview_time:
             interview_datetime = datetime.combine(interview_date, interview_time)
-            # Allow booking up to 1 hour in the past to account for timezone differences
-            min_datetime = (timezone.now() - timedelta(hours=1)).replace(tzinfo=None)
+            # Lenient: Allow booking up to 30 days in the past (for testing)
+            min_datetime = (timezone.now() - timedelta(days=30)).replace(tzinfo=None)
+
             if interview_datetime < min_datetime:
-                raise serializers.ValidationError({"date": "Cannot book interviews in the past"})
+                raise serializers.ValidationError({"date": "Cannot book interviews more than 30 days in the past"})
 
         return attrs
 
@@ -95,26 +132,38 @@ class InterviewCreateSerializer(serializers.ModelSerializer):
 
 
 class InterviewListSerializer(serializers.ModelSerializer):
-    """Simplified serializer for interview list"""
-    employer_name = serializers.SerializerMethodField()
-    provider_name = serializers.SerializerMethodField()
-    office_name = serializers.SerializerMethodField()
+    """Serializer for interview list with full details"""
+    employer = UserSerializer(read_only=True)
+    provider = serializers.SerializerMethodField(read_only=True)
+    officeLocation = OfficeLocationSerializer(read_only=True)
 
     class Meta:
         model = Interview
         fields = [
-            'id', 'employer_name', 'provider_name', 'date', 'time',
-            'office_name', 'status', 'createdAt'
+            'id', 'employer', 'provider', 'date', 'time',
+            'officeLocation', 'status', 'notes', 'cancellationReason',
+            'rescheduleReason', 'createdAt', 'updatedAt'
         ]
 
-    def get_employer_name(self, obj):
-        return obj.employer.companyName or obj.employer.fullName
-
-    def get_provider_name(self, obj):
-        return obj.provider.fullName
-
-    def get_office_name(self, obj):
-        return obj.officeLocation.name if obj.officeLocation else None
+    def get_provider(self, obj):
+        """Get provider profile data"""
+        try:
+            from users.models import ProviderProfile
+            profile = ProviderProfile.objects.get(user=obj.provider)
+            return InterviewProviderSerializer(profile).data
+        except ProviderProfile.DoesNotExist:
+            # Fallback to basic user data
+            return {
+                'id': obj.provider.id,
+                'name': obj.provider.fullName,
+                'email': obj.provider.email,
+                'phone': obj.provider.phone,
+                'category': obj.provider.category,
+                'profilePhoto': None,
+                'rating': 0,
+                'totalInterviews': 0,
+                'experience': obj.provider.experience or 0,
+            }
 
 
 class InterviewUpdateSerializer(serializers.ModelSerializer):

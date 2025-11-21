@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
-import { employersAPI } from '../api';
+import { employersAPI, authAPI } from '../api';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -203,9 +203,11 @@ function EmployerProfile() {
     setPasswordChanging(true);
 
     try {
-      // TODO: Implement password change API endpoint
-      // For now, we'll simulate an API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await authAPI.changePassword({
+        old_password: passwordData.currentPassword,
+        new_password: passwordData.newPassword,
+        new_password2: passwordData.confirmPassword,
+      });
 
       alert('Password changed successfully!');
 
@@ -218,7 +220,10 @@ function EmployerProfile() {
       setShowPasswordSection(false);
     } catch (error) {
       console.error('Password change error:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to change password. Please try again.';
+      const errorMessage = error.response?.data?.old_password ||
+                          error.response?.data?.new_password ||
+                          error.response?.data?.message ||
+                          'Failed to change password. Please try again.';
       alert(errorMessage);
     } finally {
       setPasswordChanging(false);

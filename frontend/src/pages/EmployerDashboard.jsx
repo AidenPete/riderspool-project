@@ -1,41 +1,46 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
+import { interviewsAPI } from '../api';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import InterviewDetailModal from '../components/interview/InterviewDetailModal';
 import './Dashboard.css';
 
 function EmployerDashboard() {
   const user = useSelector(selectUser);
+  const [interviews, setInterviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedInterview, setSelectedInterview] = useState(null);
 
-  // Mock data - will be replaced with API calls
+  // Fetch interviews from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const interviewsData = await interviewsAPI.getInterviews();
+        setInterviews(interviewsData.results || interviewsData || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const upcomingInterviews = interviews.filter(i =>
+    ['pending', 'confirmed'].includes(i.status)
+  );
+
   const stats = {
-    activeBookings: 3,
-    completedInterviews: 12,
-    savedProviders: 8,
+    activeBookings: upcomingInterviews.length,
+    completedInterviews: interviews.filter(i => i.status === 'completed').length,
+    savedProviders: 0, // Will be updated when saved providers feature is integrated
   };
-
-  const upcomingInterviews = [
-    {
-      id: 1,
-      providerName: 'John Kamau',
-      category: 'Motorbike Rider',
-      date: '2025-01-27',
-      time: '10:00 AM',
-      office: 'Nairobi Office',
-      status: 'Confirmed',
-    },
-    {
-      id: 2,
-      providerName: 'Mary Wanjiku',
-      category: 'Car Driver',
-      date: '2025-01-30',
-      time: '2:00 PM',
-      office: 'Nairobi Office',
-      status: 'Pending',
-    },
-  ];
 
   return (
     <div className="dashboard-page">
@@ -76,20 +81,23 @@ function EmployerDashboard() {
           {upcomingInterviews.length > 0 ? (
             <div className="interview-list">
               {upcomingInterviews.map(interview => (
-                <div key={interview.id} className="interview-item">
+                <div
+                  key={interview.id}
+                  className="interview-item clickable"
+                  onClick={() => setSelectedInterview(interview)}
+                >
                   <div className="interview-info">
-                    <h4>{interview.providerName}</h4>
-                    <p className="interview-category">{interview.category}</p>
+                    <h4>{interview.provider?.name || 'Provider'}</h4>
+                    <p className="interview-category">{interview.provider?.category || 'Service Provider'}</p>
                     <div className="interview-details">
-                      <span>📅 {interview.date} at {interview.time}</span>
-                      <span>🏢 {interview.office}</span>
+                      <span>📅 {new Date(interview.date).toLocaleDateString()} at {interview.time}</span>
+                      <span>🏢 {interview.officeLocation?.name || 'Office'}</span>
                     </div>
                   </div>
                   <div className="interview-actions">
                     <span className={`status-badge status-${interview.status.toLowerCase()}`}>
                       {interview.status}
                     </span>
-                    <Button variant="outline" size="small">View Details</Button>
                   </div>
                 </div>
               ))}
@@ -136,6 +144,27 @@ function EmployerDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Interview Detail Modal */}
+      {selectedInterview && (
+        <InterviewDetailModal
+          interview={selectedInterview}
+          onClose={() => setSelectedInterview(null)}
+          onUpdate={() => {
+            // Refresh interviews data
+            const fetchData = async () => {
+              try {
+                const interviewsData = await interviewsAPI.getInterviews();
+                setInterviews(interviewsData.results || interviewsData || []);
+              } catch (error) {
+                console.error('Error fetching interviews:', error);
+              }
+            };
+            fetchData();
+            setSelectedInterview(null);
+          }}
+        />
+      )}
     </div>
   );
 }

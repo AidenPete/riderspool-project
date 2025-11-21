@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
+import { savedProvidersAPI } from '../api';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import ProviderCard from '../components/search/ProviderCard';
@@ -9,81 +10,45 @@ import './SavedProviders.css';
 
 function SavedProviders() {
   const user = useSelector(selectUser);
-
-  // Mock saved providers - matching backend API structure
-  const mockSavedProviders = [
-    {
-      id: 1,
-      registeredName: 'John Kamau',
-      user: {
-        id: 1,
-        fullName: 'John Kamau',
-        email: 'john@example.com',
-      },
-      category: 'motorbike-rider',
-      profilePhoto: null,
-      rating: 4.8,
-      totalInterviews: 15,
-      location: 'Nairobi',
-      yearsOfExperience: 5,
-      vehicleType: 'Honda',
-      bio: 'Experienced delivery rider with excellent knowledge of Nairobi routes.',
-      skills: ['First Aid', 'Navigation Expert', 'Customer Service'],
-      availability: true,
-      isSaved: true,
-      savedAt: '2024-11-15',
-    },
-    {
-      id: 2,
-      registeredName: 'Mary Wanjiku',
-      user: {
-        id: 2,
-        fullName: 'Mary Wanjiku',
-        email: 'mary@example.com',
-      },
-      category: 'car-driver',
-      profilePhoto: null,
-      rating: 4.9,
-      totalInterviews: 23,
-      location: 'Nairobi',
-      yearsOfExperience: 8,
-      vehicleType: 'SUV',
-      bio: 'Professional driver with clean driving record.',
-      skills: ['First Aid', 'Multiple Languages', 'Vehicle Maintenance'],
-      availability: true,
-      isSaved: true,
-      savedAt: '2024-11-18',
-    },
-    {
-      id: 6,
-      registeredName: 'Susan Njeri',
-      user: {
-        id: 6,
-        fullName: 'Susan Njeri',
-        email: 'susan@example.com',
-      },
-      category: 'car-driver',
-      profilePhoto: null,
-      rating: 5.0,
-      totalInterviews: 42,
-      location: 'Nairobi',
-      yearsOfExperience: 10,
-      vehicleType: 'Sedan',
-      bio: 'Executive driver with impeccable record. Specializing in corporate transport.',
-      skills: ['Multiple Languages', 'First Aid', 'Professional Etiquette', 'Tour Guide'],
-      availability: true,
-      isSaved: true,
-      savedAt: '2024-11-12',
-    },
-  ];
-
-  const [savedProviders, setSavedProviders] = useState(mockSavedProviders);
+  const [savedProviders, setSavedProviders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('recent');
 
-  const handleRemove = (providerId) => {
+  // Fetch saved providers on mount
+  useEffect(() => {
+    const fetchSavedProviders = async () => {
+      try {
+        const response = await savedProvidersAPI.getSavedProviders();
+        // Map response to extract provider data
+        const providers = (response.results || response).map(item => ({
+          ...item.provider,
+          savedId: item.id,
+          savedAt: item.savedAt,
+          isSaved: true,
+        }));
+        setSavedProviders(providers);
+      } catch (error) {
+        console.error('Error fetching saved providers:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSavedProviders();
+  }, []);
+
+  const handleRemove = async (providerId) => {
     if (confirm('Remove this provider from your saved list?')) {
-      setSavedProviders(prev => prev.filter(p => p.id !== providerId));
-      // TODO: API call to remove from saved
+      const provider = savedProviders.find(p => p.id === providerId);
+      if (provider && provider.savedId) {
+        try {
+          await savedProvidersAPI.removeSavedProvider(provider.savedId);
+          setSavedProviders(prev => prev.filter(p => p.id !== providerId));
+        } catch (error) {
+          console.error('Error removing saved provider:', error);
+          alert('Failed to remove provider. Please try again.');
+        }
+      }
     }
   };
 
@@ -99,6 +64,17 @@ function SavedProviders() {
         return 0;
     }
   });
+
+  if (loading) {
+    return (
+      <div className="saved-providers-page">
+        <Navbar />
+        <div className="saved-providers-container">
+          <div className="loading-message">Loading saved providers...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="saved-providers-page">

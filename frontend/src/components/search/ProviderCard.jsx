@@ -1,25 +1,37 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { savedProvidersAPI } from '../../api';
 import Button from '../common/Button';
-import RequestInterviewModal from '../interview/RequestInterviewModal';
 import './ProviderCard.css';
 
 function ProviderCard({ provider }) {
+  const navigate = useNavigate();
   const [isSaved, setIsSaved] = useState(provider.isSaved || false);
-  const [showInterviewModal, setShowInterviewModal] = useState(false);
+  const [savedId, setSavedId] = useState(provider.savedId || null);
 
-  const handleSave = () => {
-    setIsSaved(!isSaved);
-    // TODO: API call to save/unsave provider
+  const handleSave = async (e) => {
+    e.preventDefault(); // Prevent navigation when clicking save button
+    e.stopPropagation();
+    try {
+      if (isSaved && savedId) {
+        // Unsave the provider
+        await savedProvidersAPI.removeSavedProvider(savedId);
+        setIsSaved(false);
+        setSavedId(null);
+      } else {
+        // Save the provider
+        const result = await savedProvidersAPI.saveProvider(provider.user?.id || provider.id);
+        setIsSaved(true);
+        setSavedId(result.id);
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving provider:', error);
+      alert('Failed to update saved status. Please try again.');
+    }
   };
 
-  const handleRequestInterview = () => {
-    setShowInterviewModal(true);
-  };
-
-  const handleInterviewSuccess = () => {
-    // Refresh or update UI as needed
-    console.log('Interview request sent successfully');
+  const handleCardClick = () => {
+    navigate(`/provider/${provider.id}`);
   };
 
   // Get display name (use registeredName or user's fullName)
@@ -29,7 +41,7 @@ function ProviderCard({ provider }) {
   ).join(' ') || 'Service Provider';
 
   return (
-    <div className="provider-card">
+    <div className="provider-card" onClick={handleCardClick}>
       <div className="provider-header">
         <div className="provider-avatar">
           {provider.profilePhoto ? (
@@ -96,24 +108,19 @@ function ProviderCard({ provider }) {
       </div>
 
       <div className="provider-actions">
-        <Link to={`/provider/${provider.id}`}>
-          <Button variant="outline" size="small" fullWidth>
-            View Profile
-          </Button>
-        </Link>
-        <Button variant="primary" size="small" fullWidth onClick={handleRequestInterview}>
-          Request Interview
+        <Button
+          variant="primary"
+          size="small"
+          fullWidth
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/provider/${provider.id}`);
+          }}
+        >
+          View Profile
         </Button>
       </div>
 
-      {/* Interview Request Modal */}
-      {showInterviewModal && (
-        <RequestInterviewModal
-          provider={provider}
-          onClose={() => setShowInterviewModal(false)}
-          onSuccess={handleInterviewSuccess}
-        />
-      )}
     </div>
   );
 }

@@ -105,6 +105,13 @@ function ProviderProfile() {
       <Navbar />
 
       <div className="provider-profile-container">
+        {/* Back Button */}
+        <div className="profile-back-button">
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            ← Back
+          </Button>
+        </div>
+
         {/* Header Section */}
         <div className="profile-header-section">
           <div className="profile-header-content">

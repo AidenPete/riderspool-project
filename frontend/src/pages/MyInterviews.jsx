@@ -1,36 +1,39 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
 import { interviewsAPI } from '../api';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import InterviewDetailModal from '../components/interview/InterviewDetailModal';
 import './MyInterviews.css';
 
 function MyInterviews() {
+  const navigate = useNavigate();
   const user = useSelector(selectUser);
   const [activeTab, setActiveTab] = useState('pending');
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedInterview, setSelectedInterview] = useState(null);
 
   // Fetch interviews from API
-  useEffect(() => {
-    const fetchInterviews = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await interviewsAPI.getInterviews();
-        setInterviews(response.results || response);
-      } catch (err) {
-        console.error('Error fetching interviews:', err);
-        setError('Failed to load interviews');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchInterviews = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await interviewsAPI.getInterviews();
+      setInterviews(response.results || response);
+    } catch (err) {
+      console.error('Error fetching interviews:', err);
+      setError('Failed to load interviews');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchInterviews();
   }, []);
 
@@ -126,7 +129,7 @@ function MyInterviews() {
     { id: 'pending', label: 'Pending', count: interviews.filter(i => i.status === 'pending').length },
     { id: 'confirmed', label: 'Confirmed', count: interviews.filter(i => i.status === 'confirmed').length },
     { id: 'completed', label: 'Completed', count: interviews.filter(i => i.status === 'completed').length },
-    { id: 'declined', label: 'Declined', count: interviews.filter(i => i.status === 'declined').length },
+    { id: 'cancelled', label: 'Cancelled', count: interviews.filter(i => i.status === 'cancelled').length },
   ];
 
   const filteredInterviews = interviews.filter(interview => interview.status === activeTab);
@@ -136,7 +139,7 @@ function MyInterviews() {
       pending: { label: 'Pending Response', className: 'pending' },
       confirmed: { label: 'Confirmed', className: 'confirmed' },
       completed: { label: 'Completed', className: 'completed' },
-      declined: { label: 'Declined', className: 'declined' },
+      cancelled: { label: 'Cancelled', className: 'cancelled' },
     };
     const config = statusConfig[status] || statusConfig.pending;
     return <span className={`status-badge ${config.className}`}>{config.label}</span>;
@@ -147,236 +150,17 @@ function MyInterviews() {
     return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const handleAccept = async (interviewId) => {
-    const interview = interviews.find(i => i.id === interviewId);
-
-    if (confirm('Are you sure you want to accept this interview?')) {
-      try {
-        // TODO: API call to accept interview
-        /*
-        API Endpoint: POST /api/interviews/{interviewId}/accept
-
-        Backend Actions:
-        1. Update interview status to 'confirmed'
-        2. Send Email to Employer:
-           - Subject: "{providerName} Accepted Your Interview Request"
-           - Body: Confirmation details, date, time, location, next steps
-
-        3. Send SMS to Employer:
-           - "{providerName} accepted your interview on {date} at {time}.
-            Location: {officeName}. See you there!"
-
-        4. Send Confirmation Email to Provider:
-           - Subject: "Interview Confirmed with {employerName}"
-           - Body: Interview details, reminders, office location
-
-        5. Send SMS to Provider:
-           - "Interview confirmed with {employerName} on {date} at {time}.
-            Location: {officeName}. We've sent you a confirmation email."
-        */
-
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        console.log('Interview Accepted:', {
-          interviewId,
-          providerName: user.fullName,
-          employerName: interview.employer.companyName,
-        });
-
-        console.log('Email to Employer:', {
-          to: interview.employer.email || 'employer@email.com',
-          subject: `${user.fullName} Accepted Your Interview Request`,
-          body: `
-            Good news! ${user.fullName} has accepted your interview request.
-
-            Interview Details:
-            Date: ${new Date(interview.date).toDateString()}
-            Time: ${interview.time}
-            Duration: ${interview.duration}
-            Location: ${interview.office.name}
-            Address: ${interview.office.address}
-
-            ${user.fullName} will meet you at the office. Please arrive 10 minutes early.
-
-            See you at the interview!
-          `,
-        });
-
-        console.log('SMS to Employer:', {
-          to: interview.employer.phone || 'Employer Phone',
-          message: `${user.fullName} accepted your interview on ${new Date(interview.date).toDateString()} at ${interview.time}. Location: ${interview.office.name}. See you there!`,
-        });
-
-        alert(`✅ Interview Accepted Successfully!
-
-📧 Notifications Sent:
-• Email to ${interview.employer.companyName}
-• SMS to ${interview.employer.companyName}
-• Confirmation email to you
-
-The employer has been notified that you accepted the interview.
-
-Interview Details:
-📅 ${new Date(interview.date).toDateString()}
-🕐 ${interview.time}
-📍 ${interview.office.name}
-
-We've sent you a confirmation email with all the details.`);
-
-      } catch (error) {
-        alert('Failed to accept interview. Please try again.');
-      }
-    }
+  const handleViewDetails = (interview) => {
+    setSelectedInterview(interview);
   };
 
-  const handleDecline = async (interviewId) => {
-    const interview = interviews.find(i => i.id === interviewId);
-    const reason = prompt('Please provide a reason for declining (optional):');
-
-    if (reason !== null) {
-      try {
-        // TODO: API call to decline interview with reason
-        /*
-        API Endpoint: POST /api/interviews/{interviewId}/decline
-
-        Backend Actions:
-        1. Update interview status to 'declined'
-        2. Send Email to Employer:
-           - Subject: "{providerName} Declined Your Interview Request"
-           - Body: Include decline reason, suggest other providers
-
-        3. Send SMS to Employer:
-           - "{providerName} declined your interview request.
-            {reason}. Search for other providers on Riderspool."
-
-        4. Send Confirmation Email to Provider:
-           - Subject: "Interview Request Declined"
-           - Body: Confirmation that the request was declined
-        */
-
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        console.log('Interview Declined:', {
-          interviewId,
-          providerName: user.fullName,
-          employerName: interview.employer.companyName,
-          reason,
-        });
-
-        console.log('Email to Employer:', {
-          to: interview.employer.email || 'employer@email.com',
-          subject: `${user.fullName} Declined Your Interview Request`,
-          body: `
-            ${user.fullName} has declined your interview request.
-
-            ${reason ? `Reason: ${reason}` : 'No reason provided'}
-
-            Don't worry! There are many other qualified providers on Riderspool.
-            Search for more providers in the ${interview.provider?.category || 'same'} category.
-
-            Visit your dashboard to find more candidates.
-          `,
-        });
-
-        console.log('SMS to Employer:', {
-          to: interview.employer.phone || 'Employer Phone',
-          message: `${user.fullName} declined your interview request. ${reason ? reason : 'No reason provided'}. Search for other providers on Riderspool.`,
-        });
-
-        alert(`Interview Declined
-
-📧 Notifications Sent:
-• Email to ${interview.employer.companyName}
-• SMS to ${interview.employer.companyName}
-
-The employer has been notified of your decision.`);
-
-      } catch (error) {
-        alert('Failed to decline interview. Please try again.');
-      }
-    }
+  const handleCloseModal = () => {
+    setSelectedInterview(null);
   };
 
-  const handleReschedule = async (interviewId) => {
-    const interview = interviews.find(i => i.id === interviewId);
-    const reason = prompt('Please provide a reason for rescheduling:');
-
-    if (reason) {
-      try {
-        // TODO: API call to request reschedule with reason
-        /*
-        API Endpoint: POST /api/interviews/{interviewId}/reschedule
-
-        Backend Actions:
-        1. Update interview status to 'reschedule_requested'
-        2. Send Email to Employer:
-           - Subject: "{providerName} Requested to Reschedule Interview"
-           - Body: Current schedule, reschedule reason, link to propose new time
-
-        3. Send SMS to Employer:
-           - "{providerName} requested to reschedule interview on {date}.
-            Reason: {reason}. Check email for details."
-
-        4. Send Confirmation Email to Provider:
-           - Subject: "Reschedule Request Sent"
-           - Body: Confirmation, employer will be notified
-
-        5. Send SMS to Provider:
-           - "Reschedule request sent to {employerName}.
-            You'll be notified when they respond."
-        */
-
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        console.log('Reschedule Request:', {
-          interviewId,
-          providerName: user.fullName,
-          employerName: interview.employer.companyName,
-          reason,
-          originalDate: interview.date,
-          originalTime: interview.time,
-        });
-
-        console.log('Email to Employer:', {
-          to: interview.employer.email || 'employer@email.com',
-          subject: `${user.fullName} Requested to Reschedule Interview`,
-          body: `
-            ${user.fullName} has requested to reschedule your interview.
-
-            Current Schedule:
-            Date: ${new Date(interview.date).toDateString()}
-            Time: ${interview.time}
-            Location: ${interview.office.name}
-
-            Reason for Rescheduling:
-            ${reason}
-
-            Please login to your Riderspool account to propose a new time
-            or contact ${user.fullName} directly.
-
-            We understand schedules can change. Thank you for your flexibility.
-          `,
-        });
-
-        console.log('SMS to Employer:', {
-          to: interview.employer.phone || 'Employer Phone',
-          message: `${user.fullName} requested to reschedule interview on ${new Date(interview.date).toDateString()}. Reason: ${reason}. Check your email for details.`,
-        });
-
-        alert(`📅 Reschedule Request Sent
-
-📧 Notifications Sent:
-• Email to ${interview.employer.companyName}
-• SMS to ${interview.employer.companyName}
-
-The employer has been notified of your reschedule request.
-
-You will receive an email and SMS notification when ${interview.employer.companyName} responds with a new proposed time.`);
-
-      } catch (error) {
-        alert('Failed to send reschedule request. Please try again.');
-      }
-    }
+  const handleUpdateInterview = () => {
+    fetchInterviews();
+    setSelectedInterview(null);
   };
 
   const renderStars = (rating) => {
@@ -396,6 +180,13 @@ You will receive an email and SMS notification when ${interview.employer.company
       <Navbar />
 
       <div className="interviews-container">
+        {/* Back Button */}
+        <div className="interviews-back-button">
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            ← Back
+          </Button>
+        </div>
+
         <div className="interviews-header">
           <div>
             <h1>My Interviews</h1>
@@ -424,14 +215,18 @@ You will receive an email and SMS notification when ${interview.employer.company
         <div className="interviews-list">
           {filteredInterviews.length > 0 ? (
             filteredInterviews.map(interview => (
-              <Card key={interview.id} className="interview-card">
+              <Card
+                key={interview.id}
+                className="interview-card clickable-card"
+                onClick={() => handleViewDetails(interview)}
+              >
                 <div className="interview-header">
                   <div className="employer-info">
                     <div className="employer-icon">🏢</div>
                     <div>
-                      <h3>{interview.employer.companyName}</h3>
+                      <h3>{interview.employer?.companyName || interview.employer?.fullName || 'Company'}</h3>
                       <p className="employer-details">
-                        {interview.employer.industry} • Contact: {interview.employer.contactPerson}
+                        {interview.employer?.industry || 'Industry'}
                       </p>
                     </div>
                   </div>
@@ -448,19 +243,10 @@ You will receive an email and SMS notification when ${interview.employer.company
                   </div>
 
                   <div className="detail-row">
-                    <span className="detail-icon">⏱️</span>
-                    <div>
-                      <strong>Duration:</strong>
-                      <p>{interview.duration}</p>
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
                     <span className="detail-icon">🏢</span>
                     <div>
                       <strong>Location:</strong>
-                      <p>{interview.office.name}</p>
-                      <p className="office-address">{interview.office.address}</p>
+                      <p>{interview.officeLocation?.name || interview.office?.name || 'Office location'}</p>
                     </div>
                   </div>
 
@@ -469,73 +255,34 @@ You will receive an email and SMS notification when ${interview.employer.company
                       <span className="detail-icon">📝</span>
                       <div>
                         <strong>Employer's Notes:</strong>
-                        <p>{interview.notes}</p>
+                        <p className="truncate-text">{interview.notes}</p>
                       </div>
                     </div>
                   )}
 
-                  {interview.status === 'declined' && interview.declineReason && (
-                    <div className="detail-row decline-reason">
+                  {interview.status === 'cancelled' && interview.cancellationReason && (
+                    <div className="detail-row cancel-alert">
                       <span className="detail-icon">❌</span>
                       <div>
-                        <strong>Decline Reason:</strong>
-                        <p>{interview.declineReason}</p>
+                        <strong>Cancellation Reason:</strong>
+                        <p>{interview.cancellationReason}</p>
                       </div>
                     </div>
                   )}
 
-                  {interview.status === 'completed' && interview.employerReview && (
-                    <div className="employer-review">
-                      <strong>Employer's Review:</strong>
-                      <div className="review-stars">
-                        {renderStars(interview.employerReview.rating)}
-                        <span>{interview.employerReview.rating}/5</span>
+                  {interview.rescheduleReason && (
+                    <div className="detail-row reschedule-alert">
+                      <span className="detail-icon">🔄</span>
+                      <div>
+                        <strong>Reschedule Reason:</strong>
+                        <p>{interview.rescheduleReason}</p>
                       </div>
-                      <p>"{interview.employerReview.comment}"</p>
                     </div>
                   )}
 
                   <div className="request-time">
-                    <span>Requested on {new Date(interview.requestedAt).toLocaleDateString()}</span>
+                    <span>Click to view details and take actions</span>
                   </div>
-                </div>
-
-                <div className="interview-actions">
-                  {interview.status === 'pending' && (
-                    <>
-                      <Button variant="outline" size="small" onClick={() => handleDecline(interview.id)}>
-                        Decline
-                      </Button>
-                      <Button variant="primary" size="small" onClick={() => handleAccept(interview.id)}>
-                        Accept Interview
-                      </Button>
-                    </>
-                  )}
-
-                  {interview.status === 'confirmed' && (
-                    <>
-                      <div className="confirmed-message">
-                        <span className="confirmed-icon">✓</span>
-                        <span>You have confirmed this interview. See you at the office!</span>
-                      </div>
-                      <Button variant="outline" size="small" onClick={() => handleReschedule(interview.id)}>
-                        Request Reschedule
-                      </Button>
-                    </>
-                  )}
-
-                  {interview.status === 'completed' && interview.employerReview && (
-                    <div className="review-received">
-                      <span className="review-icon">⭐</span>
-                      <span>Interview completed • Review received</span>
-                    </div>
-                  )}
-
-                  {interview.status === 'declined' && (
-                    <div className="declined-message">
-                      <span>You declined this interview on {new Date(interview.declinedAt).toLocaleDateString()}</span>
-                    </div>
-                  )}
                 </div>
               </Card>
             ))
@@ -548,7 +295,7 @@ You will receive an email and SMS notification when ${interview.employer.company
                   {activeTab === 'pending' && 'You have no pending interview requests at the moment.'}
                   {activeTab === 'confirmed' && 'You have no confirmed interviews scheduled.'}
                   {activeTab === 'completed' && 'You have not completed any interviews yet.'}
-                  {activeTab === 'declined' && 'You have not declined any interviews.'}
+                  {activeTab === 'cancelled' && 'You have no cancelled interviews.'}
                 </p>
                 {activeTab === 'pending' && (
                   <Link to="/profile">
@@ -560,6 +307,15 @@ You will receive an email and SMS notification when ${interview.employer.company
           )}
         </div>
       </div>
+
+      {/* Interview Detail Modal */}
+      {selectedInterview && (
+        <InterviewDetailModal
+          interview={selectedInterview}
+          onClose={handleCloseModal}
+          onUpdate={handleUpdateInterview}
+        />
+      )}
     </div>
   );
 }

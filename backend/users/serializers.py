@@ -173,13 +173,33 @@ class EmployerProfileCreateSerializer(serializers.ModelSerializer):
 
 class SavedProviderSerializer(serializers.ModelSerializer):
     """Serializer for SavedProvider model"""
-    provider = UserSerializer(read_only=True)
-    employer = UserSerializer(read_only=True)
+    provider = serializers.SerializerMethodField(read_only=True)
+    provider_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = SavedProvider
-        fields = ['id', 'employer', 'provider', 'savedAt']
-        read_only_fields = ['id', 'employer', 'savedAt']
+        fields = ['id', 'provider', 'provider_id', 'savedAt']
+        read_only_fields = ['id', 'provider', 'savedAt']
+
+    def get_provider(self, obj):
+        """Get provider profile with full details"""
+        try:
+            from .models import ProviderProfile
+            profile = ProviderProfile.objects.get(user=obj.provider)
+            return ProviderListSerializer(profile).data
+        except ProviderProfile.DoesNotExist:
+            return UserSerializer(obj.provider).data
+
+    def create(self, validated_data):
+        """Create a saved provider entry"""
+        employer = self.context['request'].user
+        provider_id = validated_data['provider_id']
+
+        saved, created = SavedProvider.objects.get_or_create(
+            employer=employer,
+            provider_id=provider_id
+        )
+        return saved
 
 
 class ChangePasswordSerializer(serializers.Serializer):

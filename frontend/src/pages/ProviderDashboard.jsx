@@ -2,44 +2,89 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
-import { providersAPI } from '../api';
+import { providersAPI, interviewsAPI } from '../api';
+import { verificationsAPI } from '../api/verifications';
 import { calculateProfileCompletion, getPendingTasks } from '../utils/profileCompletion';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import InterviewDetailModal from '../components/interview/InterviewDetailModal';
 import './Dashboard.css';
 
 function ProviderDashboard() {
   const user = useSelector(selectUser);
   const [profileData, setProfileData] = useState(null);
+  const [interviews, setInterviews] = useState([]);
+  const [verification, setVerification] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedInterview, setSelectedInterview] = useState(null);
 
-  const stats = {
-    upcomingInterviews: 0,
-    totalInterviews: profileData?.totalInterviews || 0,
-    profileViews: 0,
-  };
-
-  // Fetch profile data
+  // Fetch profile data, interviews, and verification
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
-        const data = await providersAPI.getMyProfile();
-        setProfileData(data);
+        const [profile, interviewsData] = await Promise.all([
+          providersAPI.getMyProfile(),
+          interviewsAPI.getInterviews()
+        ]);
+        setProfileData(profile);
+        setInterviews(interviewsData.results || interviewsData || []);
+
+        // Fetch verification data separately (may not exist)
+        try {
+          const verificationData = await verificationsAPI.getMyVerification();
+          setVerification(verificationData);
+        } catch (err) {
+          // No verification found, that's okay
+          console.log('No verification data:', err);
+        }
       } catch (error) {
-        console.log('No profile found');
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchData();
   }, []);
+
+  const upcomingInterviews = interviews.filter(i =>
+    ['pending', 'confirmed'].includes(i.status)
+  );
+
+  const stats = {
+    upcomingInterviews: upcomingInterviews.length,
+    totalInterviews: profileData?.totalInterviews || 0,
+    profileViews: 0,
+  };
 
   const profileCompletion = calculateProfileCompletion(profileData);
   const pendingTasks = getPendingTasks(profileData).slice(0, 4); // Show top 4 tasks
 
-  const upcomingInterviews = [
+  // Helper function to format document types
+  const getDocumentTypeLabel = (type) => {
+    const types = {
+      id: 'National ID',
+      license: 'Driver\'s License',
+      profile_photo: 'Profile Photo',
+      certificate: 'Certificate',
+      other: 'Other'
+    };
+    return types[type] || type;
+  };
+
+  // Helper function to get status badge style
+  const getVerificationStatusBadge = (status) => {
+    const styles = {
+      pending: { label: 'Pending Review', className: 'status-pending' },
+      approved: { label: 'Verified', className: 'status-confirmed' },
+      rejected: { label: 'Rejected', className: 'status-cancelled' }
+    };
+    return styles[status] || styles.pending;
+  };
+
+  // Mock interviews for fallback (remove after testing)
+  const mockUpcomingInterviews = [
     {
       id: 1,
       companyName: 'ABC Construction Ltd',
@@ -107,6 +152,55 @@ function ProviderDashboard() {
         </div>
 
         <div className="dashboard-grid">
+          {/* Verification Documents */}
+          {verification && (
+            <Card title="Verification Documents">
+              <div className="verification-status-header">
+                <span className={`status-badge ${getVerificationStatusBadge(verification.status).className}`}>
+                  {getVerificationStatusBadge(verification.status).label}
+                </span>
+              </div>
+
+              {verification.documents && verification.documents.length > 0 ? (
+                <div className="documents-list">
+                  {verification.documents.map(doc => (
+                    <div key={doc.id} className="document-item">
+                      <div className="document-icon">📄</div>
+                      <div className="document-info">
+                        <h5>{getDocumentTypeLabel(doc.documentType)}</h5>
+                        <p className="document-meta">
+                          Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <a
+                        href={doc.document}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="document-action"
+                      >
+                        <Button variant="outline" size="small">View</Button>
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state-small">
+                  <p>No documents uploaded yet</p>
+                </div>
+              )}
+
+              {verification.status === 'rejected' && verification.rejectionReason && (
+                <div className="rejection-notice">
+                  <span className="rejection-icon">⚠️</span>
+                  <div>
+                    <strong>Rejection Reason:</strong>
+                    <p>{verification.rejectionReason}</p>
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
+
           {/* Pending Tasks */}
           <Card title="Complete Your Profile">
             <div className="task-list">
@@ -127,12 +221,16 @@ function ProviderDashboard() {
             {upcomingInterviews.length > 0 ? (
               <div className="interview-list">
                 {upcomingInterviews.map(interview => (
-                  <div key={interview.id} className="interview-item-provider">
-                    <h4>{interview.companyName}</h4>
-                    <p className="interview-category">{interview.industry}</p>
+                  <div
+                    key={interview.id}
+                    className="interview-item-provider clickable"
+                    onClick={() => setSelectedInterview(interview)}
+                  >
+                    <h4>{interview.employer?.companyName || interview.employer?.fullName || 'Company'}</h4>
+                    <p className="interview-category">{interview.employer?.industry || 'Industry'}</p>
                     <div className="interview-details">
-                      <span>📅 {interview.date} at {interview.time}</span>
-                      <span>🏢 {interview.office}</span>
+                      <span>📅 {new Date(interview.date).toLocaleDateString()} at {interview.time}</span>
+                      <span>🏢 {interview.officeLocation?.name || 'Office'}</span>
                     </div>
                     <span className={`status-badge status-${interview.status.toLowerCase()}`}>
                       {interview.status}
@@ -174,6 +272,27 @@ function ProviderDashboard() {
           </Card>
         </div>
       </div>
+
+      {/* Interview Detail Modal */}
+      {selectedInterview && (
+        <InterviewDetailModal
+          interview={selectedInterview}
+          onClose={() => setSelectedInterview(null)}
+          onUpdate={() => {
+            // Refresh interviews data
+            const fetchData = async () => {
+              try {
+                const interviewsData = await interviewsAPI.getInterviews();
+                setInterviews(interviewsData.results || interviewsData || []);
+              } catch (error) {
+                console.error('Error fetching interviews:', error);
+              }
+            };
+            fetchData();
+            setSelectedInterview(null);
+          }}
+        />
+      )}
     </div>
   );
 }

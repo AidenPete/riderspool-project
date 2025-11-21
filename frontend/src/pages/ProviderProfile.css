@@ -10,6 +10,11 @@
   padding: 2rem 1.5rem;
 }
 
+/* Back Button */
+.profile-back-button {
+  margin-bottom: 1.5rem;
+}
+
 /* Header Section */
 .profile-header-section {
   background: white;

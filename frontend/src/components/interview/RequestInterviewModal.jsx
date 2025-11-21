@@ -75,8 +75,10 @@ function RequestInterviewModal({ provider, onClose, onSuccess }) {
         date: formData.date,
         time: formData.time,
         officeLocation_id: parseInt(formData.officeLocation),
-        notes: formData.notes,
+        notes: formData.notes || '',
       };
+
+      console.log('Sending interview request:', interviewData);
 
       await interviewsAPI.createInterview(interviewData);
 
@@ -88,7 +90,32 @@ function RequestInterviewModal({ provider, onClose, onSuccess }) {
       onClose();
     } catch (error) {
       console.error('Error creating interview:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to send interview request. Please try again.';
+      // Get detailed error message
+      let errorMessage = 'Failed to send interview request. Please try again.';
+
+      if (error.response?.data) {
+        const data = error.response.data;
+        // Check for field-specific errors
+        if (data.date) {
+          errorMessage = `Date error: ${data.date}`;
+        } else if (data.time) {
+          errorMessage = `Time error: ${data.time}`;
+        } else if (data.officeLocation_id) {
+          errorMessage = `Office location error: ${data.officeLocation_id}`;
+        } else if (data.provider_id) {
+          errorMessage = `Provider error: ${data.provider_id}`;
+        } else if (data.message) {
+          errorMessage = data.message;
+        } else if (data.error) {
+          errorMessage = data.error;
+        } else if (data.detail) {
+          errorMessage = data.detail;
+        } else {
+          // Show all errors if we can't identify the specific field
+          errorMessage = JSON.stringify(data);
+        }
+      }
+
       alert(errorMessage);
     } finally {
       setLoading(false);

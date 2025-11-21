@@ -114,12 +114,14 @@ function App() {
               </ProviderRoute>
             }
           />
+
+          {/* Settings - Available for both user types */}
           <Route
             path="/settings"
             element={
-              <ProviderRoute>
+              <ProtectedRoute>
                 <Settings />
-              </ProviderRoute>
+              </ProtectedRoute>
             }
           />
 

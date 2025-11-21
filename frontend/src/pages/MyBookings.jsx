@@ -1,36 +1,39 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
 import { interviewsAPI } from '../api';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import InterviewDetailModal from '../components/interview/InterviewDetailModal';
 import './MyBookings.css';
 
 function MyBookings() {
+  const navigate = useNavigate();
   const user = useSelector(selectUser);
   const [activeTab, setActiveTab] = useState('upcoming');
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   // Fetch interviews from API
-  useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await interviewsAPI.getInterviews();
-        setBookings(response.results || response);
-      } catch (err) {
-        console.error('Error fetching bookings:', err);
-        setError('Failed to load bookings');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await interviewsAPI.getInterviews();
+      setBookings(response.results || response);
+    } catch (err) {
+      console.error('Error fetching bookings:', err);
+      setError('Failed to load bookings');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchBookings();
   }, []);
 
@@ -152,93 +155,17 @@ function MyBookings() {
     return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const handleCancelBooking = (bookingId) => {
-    if (confirm('Are you sure you want to cancel this interview?')) {
-      // TODO: API call to cancel booking
-      alert('Booking cancelled successfully!');
-    }
+  const handleViewDetails = (booking) => {
+    setSelectedBooking(booking);
   };
 
-  const handleReschedule = async (bookingId) => {
-    const booking = bookings.find(b => b.id === bookingId);
-    const reason = prompt('Please provide a reason for rescheduling and your preferred new date/time:');
+  const handleCloseModal = () => {
+    setSelectedBooking(null);
+  };
 
-    if (reason) {
-      try {
-        // TODO: API call to request reschedule with reason
-        /*
-        API Endpoint: POST /api/bookings/{bookingId}/reschedule
-
-        Backend Actions:
-        1. Update booking status to 'reschedule_requested'
-        2. Send Email to Provider:
-           - Subject: "{employerName} Requested to Reschedule Interview"
-           - Body: Current schedule, reschedule reason/preference, link to confirm
-
-        3. Send SMS to Provider:
-           - "{employerName} requested to reschedule interview on {date}.
-            {reason}. Check email for details."
-
-        4. Send Confirmation Email to Employer:
-           - Subject: "Reschedule Request Sent to {providerName}"
-           - Body: Confirmation, provider will be notified
-
-        5. Send SMS to Employer:
-           - "Reschedule request sent to {providerName}.
-            You'll be notified when they respond."
-        */
-
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        console.log('Reschedule Request (Employer):', {
-          bookingId,
-          employerName: user.companyName || user.fullName,
-          providerName: booking.provider.name,
-          reason,
-          originalDate: booking.date,
-          originalTime: booking.time,
-        });
-
-        console.log('Email to Provider:', {
-          to: 'provider@email.com',
-          subject: `${user.companyName || user.fullName} Requested to Reschedule Interview`,
-          body: `
-            ${user.companyName || user.fullName} has requested to reschedule your interview.
-
-            Current Schedule:
-            Date: ${new Date(booking.date).toDateString()}
-            Time: ${booking.time}
-            Location: ${booking.office.name}
-
-            Employer's Request:
-            ${reason}
-
-            Please login to your Riderspool account to confirm the new time
-            or propose an alternative.
-
-            We understand schedules can change. Thank you for your flexibility.
-          `,
-        });
-
-        console.log('SMS to Provider:', {
-          to: 'Provider Phone',
-          message: `${user.companyName || user.fullName} requested to reschedule interview on ${new Date(booking.date).toDateString()}. ${reason}. Check your email for details.`,
-        });
-
-        alert(`📅 Reschedule Request Sent
-
-📧 Notifications Sent:
-• Email to ${booking.provider.name}
-• SMS to ${booking.provider.name}
-
-The provider has been notified of your reschedule request.
-
-You will receive an email and SMS notification when ${booking.provider.name} responds to your request.`);
-
-      } catch (error) {
-        alert('Failed to send reschedule request. Please try again.');
-      }
-    }
+  const handleUpdateBooking = () => {
+    fetchBookings();
+    setSelectedBooking(null);
   };
 
   const renderStars = (rating) => {
@@ -258,6 +185,13 @@ You will receive an email and SMS notification when ${booking.provider.name} res
       <Navbar />
 
       <div className="bookings-container">
+        {/* Back Button */}
+        <div className="bookings-back-button">
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            ← Back
+          </Button>
+        </div>
+
         <div className="bookings-header">
           <div>
             <h1>My Bookings</h1>
@@ -286,26 +220,28 @@ You will receive an email and SMS notification when ${booking.provider.name} res
         <div className="bookings-list">
           {filteredBookings.length > 0 ? (
             filteredBookings.map(booking => (
-              <Card key={booking.id} className="booking-card">
+              <Card
+                key={booking.id}
+                className="booking-card clickable-card"
+                onClick={() => handleViewDetails(booking)}
+              >
                 <div className="booking-header">
                   <div className="booking-provider-info">
                     <div className="provider-avatar-small">
-                      {booking.provider.profilePhoto ? (
-                        <img src={booking.provider.profilePhoto} alt={booking.provider.name} />
+                      {booking.provider?.profilePhoto ? (
+                        <img src={booking.provider.profilePhoto} alt={booking.provider?.name || 'Provider'} />
                       ) : (
                         <div className="avatar-placeholder-small">
-                          {booking.provider.name.charAt(0).toUpperCase()}
+                          {(booking.provider?.name || 'P').charAt(0).toUpperCase()}
                         </div>
                       )}
                     </div>
                     <div>
-                      <Link to={`/provider/${booking.provider.id}`} className="provider-name-link">
-                        <h3>{booking.provider.name}</h3>
-                      </Link>
-                      <p className="provider-category">{booking.provider.category}</p>
+                      <h3>{booking.provider?.name || 'Unknown Provider'}</h3>
+                      <p className="provider-category">{booking.provider?.category || 'Service Provider'}</p>
                       <div className="provider-rating-small">
-                        {renderStars(Math.round(booking.provider.rating))}
-                        <span>{booking.provider.rating}</span>
+                        {renderStars(Math.round(booking.provider?.rating || 0))}
+                        <span>{booking.provider?.rating || 'N/A'}</span>
                       </div>
                     </div>
                   </div>
@@ -322,19 +258,10 @@ You will receive an email and SMS notification when ${booking.provider.name} res
                   </div>
 
                   <div className="detail-row">
-                    <span className="detail-icon">⏱️</span>
-                    <div>
-                      <strong>Duration:</strong>
-                      <p>{booking.duration}</p>
-                    </div>
-                  </div>
-
-                  <div className="detail-row">
                     <span className="detail-icon">🏢</span>
                     <div>
                       <strong>Location:</strong>
-                      <p>{booking.office.name}</p>
-                      <p className="office-address">{booking.office.address}</p>
+                      <p>{booking.officeLocation?.name || booking.office?.name || 'Office location'}</p>
                     </div>
                   </div>
 
@@ -343,62 +270,34 @@ You will receive an email and SMS notification when ${booking.provider.name} res
                       <span className="detail-icon">📝</span>
                       <div>
                         <strong>Notes:</strong>
-                        <p>{booking.notes}</p>
+                        <p className="truncate-text">{booking.notes}</p>
                       </div>
                     </div>
                   )}
 
-                  {booking.status === 'cancelled' && booking.cancelReason && (
-                    <div className="detail-row cancel-reason">
+                  {booking.status === 'cancelled' && booking.cancellationReason && (
+                    <div className="detail-row cancel-alert">
                       <span className="detail-icon">❌</span>
                       <div>
                         <strong>Cancellation Reason:</strong>
-                        <p>{booking.cancelReason}</p>
+                        <p>{booking.cancellationReason}</p>
                       </div>
                     </div>
                   )}
 
-                  {booking.status === 'completed' && booking.review && (
-                    <div className="booking-review">
-                      <strong>Your Review:</strong>
-                      <div className="review-stars">
-                        {renderStars(booking.review.rating)}
+                  {booking.rescheduleReason && (
+                    <div className="detail-row reschedule-alert">
+                      <span className="detail-icon">🔄</span>
+                      <div>
+                        <strong>Reschedule Reason:</strong>
+                        <p>{booking.rescheduleReason}</p>
                       </div>
-                      <p>"{booking.review.comment}"</p>
                     </div>
                   )}
-                </div>
 
-                <div className="booking-actions">
-                  {booking.status === 'confirmed' && (
-                    <>
-                      <Button variant="outline" size="small" onClick={() => handleReschedule(booking.id)}>
-                        Reschedule
-                      </Button>
-                      <Button variant="danger" size="small" onClick={() => handleCancelBooking(booking.id)}>
-                        Cancel
-                      </Button>
-                    </>
-                  )}
-
-                  {booking.status === 'pending' && (
-                    <>
-                      <Button variant="outline" size="small" onClick={() => handleCancelBooking(booking.id)}>
-                        Cancel Request
-                      </Button>
-                      <span className="pending-text">Waiting for provider confirmation</span>
-                    </>
-                  )}
-
-                  {booking.status === 'completed' && !booking.review && (
-                    <Button variant="primary" size="small">
-                      Leave Review
-                    </Button>
-                  )}
-
-                  {booking.status === 'completed' && booking.review && (
-                    <span className="review-submitted">✓ Review Submitted</span>
-                  )}
+                  <div className="click-hint">
+                    <span>Click to view details and take actions</span>
+                  </div>
                 </div>
               </Card>
             ))
@@ -422,6 +321,15 @@ You will receive an email and SMS notification when ${booking.provider.name} res
           )}
         </div>
       </div>
+
+      {/* Interview Detail Modal */}
+      {selectedBooking && (
+        <InterviewDetailModal
+          interview={selectedBooking}
+          onClose={handleCloseModal}
+          onUpdate={handleUpdateBooking}
+        />
+      )}
     </div>
   );
 }
