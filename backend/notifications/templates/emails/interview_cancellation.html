@@ -1,0 +1,21 @@
+{% extends "emails/base.html" %}
+{% block title %}Interview Cancelled{% endblock %}
+{% block content %}
+<h2>Interview Cancelled</h2>
+
+<p>Hello {{ name }},</p>
+
+<p>We regret to inform you that your scheduled interview has been cancelled by <strong>{{ cancelled_by }}</strong>.</p>
+
+<div class="alert-box">
+    <p><strong>Cancelled Interview Details:</strong></p>
+    <p><strong>Originally Scheduled:</strong> {{ interview_date }} at {{ interview_time }}</p>
+    <p><strong>Reason:</strong> {{ cancellation_reason }}</p>
+</div>
+
+<p>We apologize for any inconvenience this may cause. You can browse other options through your dashboard.</p>
+
+<a href="{{ frontend_url }}/dashboard" class="btn">Go to Dashboard</a>
+
+<p>Best regards,<br>The Riderspool Team</p>
+{% endblock %}

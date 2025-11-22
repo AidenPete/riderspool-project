@@ -55,6 +55,7 @@ class Interview(models.Model):
     notes = models.TextField(blank=True, null=True, help_text='Additional notes for the interview')
     cancellationReason = models.TextField(blank=True, null=True)
     rescheduleReason = models.TextField(blank=True, null=True)
+    isHired = models.BooleanField(default=False, help_text='Whether employer hired the provider after interview')
 
     # Timestamps
     createdAt = models.DateTimeField(auto_now_add=True)

@@ -1,0 +1,23 @@
+{% extends "emails/base.html" %}
+{% block title %}Interview Confirmed{% endblock %}
+{% block content %}
+<h2>Interview Confirmed!</h2>
+
+<p>Hello {{ name }},</p>
+
+<p>Great news! <strong>{{ provider_name }}</strong> has confirmed the interview.</p>
+
+<div class="success-box">
+    <p><strong>Confirmed Interview Details:</strong></p>
+    <p><strong>Date:</strong> {{ interview_date }}</p>
+    <p><strong>Time:</strong> {{ interview_time }}</p>
+    <p><strong>Location:</strong> {{ office_location }}</p>
+    {% if office_address %}<p><strong>Address:</strong> {{ office_address }}</p>{% endif %}
+</div>
+
+<p>Please make sure to arrive on time. You can view all your scheduled interviews in your dashboard.</p>
+
+<a href="{{ frontend_url }}/bookings" class="btn">View My Bookings</a>
+
+<p>Best regards,<br>The Riderspool Team</p>
+{% endblock %}

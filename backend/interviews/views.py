@@ -12,6 +12,7 @@ from .serializers import (
     InterviewUpdateSerializer, InterviewFeedbackSerializer,
     InterviewFeedbackCreateSerializer, OfficeLocationSerializer
 )
+from notifications.email_service import EmailService
 
 
 class OfficeLocationViewSet(viewsets.ReadOnlyModelViewSet):
@@ -57,7 +58,13 @@ class InterviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """Create interview with employer as current user"""
-        serializer.save()
+        interview = serializer.save()
+
+        # Send email notification to provider
+        try:
+            EmailService.send_interview_request_email(interview)
+        except Exception as e:
+            print(f"Failed to send interview request email: {e}")
 
     @action(detail=True, methods=['post'])
     def confirm(self, request, pk=None):
@@ -81,7 +88,11 @@ class InterviewViewSet(viewsets.ModelViewSet):
         interview.confirmedAt = timezone.now()
         interview.save()
 
-        # TODO: Send notification to employer
+        # Send email notification to employer
+        try:
+            EmailService.send_interview_confirmation_email(interview)
+        except Exception as e:
+            print(f"Failed to send interview confirmation email: {e}")
 
         return Response(
             InterviewSerializer(interview).data,
@@ -117,7 +128,11 @@ class InterviewViewSet(viewsets.ModelViewSet):
         interview.cancellationReason = cancellation_reason
         interview.save()
 
-        # TODO: Send notification to other party
+        # Send email notification to other party
+        try:
+            EmailService.send_interview_cancellation_email(interview, request.user)
+        except Exception as e:
+            print(f"Failed to send interview cancellation email: {e}")
 
         return Response(
             InterviewSerializer(interview).data,
@@ -153,7 +168,11 @@ class InterviewViewSet(viewsets.ModelViewSet):
         interview.confirmedAt = None
         interview.save()
 
-        # TODO: Send notification to other party
+        # Send email notification to other party
+        try:
+            EmailService.send_interview_reschedule_email(interview, request.user)
+        except Exception as e:
+            print(f"Failed to send interview reschedule email: {e}")
 
         return Response(
             InterviewSerializer(interview).data,
@@ -186,6 +205,38 @@ class InterviewViewSet(viewsets.ModelViewSet):
         provider_profile = interview.provider.provider_profile
         provider_profile.totalInterviews += 1
         provider_profile.save()
+
+        return Response(
+            InterviewSerializer(interview).data,
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=['post'])
+    def mark_hired(self, request, pk=None):
+        """Mark provider as hired (employer only)"""
+        interview = self.get_object()
+
+        # Check if user is the employer
+        if request.user != interview.employer:
+            return Response(
+                {'error': 'Only the employer can mark provider as hired'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if interview.status != 'completed':
+            return Response(
+                {'error': 'Only completed interviews can mark provider as hired'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        interview.isHired = True
+        interview.save()
+
+        # Send hired notification email to provider
+        try:
+            EmailService.send_hired_notification_email(interview)
+        except Exception as e:
+            print(f"Failed to send hired notification email: {e}")
 
         return Response(
             InterviewSerializer(interview).data,

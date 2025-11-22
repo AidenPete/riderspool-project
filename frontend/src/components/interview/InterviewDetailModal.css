@@ -1,7 +1,117 @@
+/* Modal Overlay - Full screen backdrop */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Modal Content - The actual modal box */
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  position: relative;
+  width: 100%;
+  animation: slideUp 0.3s ease-out;
+}
+
 .interview-detail-modal {
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.interview-detail-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.interview-detail-modal::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 0 12px 12px 0;
+}
+
+.interview-detail-modal::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.interview-detail-modal::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 12px 12px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  line-height: 1;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: #f3f4f6;
+  color: #1f2937;
 }
 
 .interview-detail-modal .modal-body {
@@ -149,7 +259,10 @@
   display: flex;
   gap: 0.75rem;
   justify-content: flex-end;
+  align-items: center;
   flex-wrap: wrap;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
 }
 
 .interview-detail-modal .status-badge {
@@ -221,9 +334,21 @@
 
 /* Responsive */
 @media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+
   .interview-detail-modal {
-    max-width: 95vw;
-    margin: 1rem;
+    max-width: 100%;
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
   }
 
   .interview-detail-modal .detail-section {
@@ -232,6 +357,13 @@
 
   .interview-detail-modal .modal-actions {
     padding: 1rem;
+    flex-direction: column;
+  }
+
+  .interview-detail-modal .modal-actions button,
+  .interview-detail-modal .modal-actions .hired-badge {
+    width: 100%;
+    justify-content: center;
   }
 
   .form-actions {
@@ -241,4 +373,33 @@
   .form-actions button {
     width: 100%;
   }
+
+  .party-info {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .detail-section .detail-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .detail-section .detail-icon {
+    font-size: 1.25rem;
+  }
+}
+
+/* Hired Badge */
+.hired-badge {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid #10b981;
+  white-space: nowrap;
 }

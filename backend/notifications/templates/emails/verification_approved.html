@@ -1,0 +1,27 @@
+{% extends "emails/base.html" %}
+{% block title %}Documents Verified{% endblock %}
+{% block content %}
+<h2>Your Documents Have Been Verified!</h2>
+
+<p>Hello {{ name }},</p>
+
+<div class="success-box">
+    <p><strong>Great news!</strong> Your submitted documents have been reviewed and approved.</p>
+</div>
+
+<p>Your profile now shows a verified badge, which helps you stand out to potential employers and increases your chances of being hired.</p>
+
+<p>Benefits of being verified:</p>
+<ul>
+    <li>Higher visibility in search results</li>
+    <li>Verified badge on your profile</li>
+    <li>Increased trust from employers</li>
+    <li>Priority for interview requests</li>
+</ul>
+
+<a href="{{ frontend_url }}/provider/profile" class="btn">View My Profile</a>
+
+<p>Thank you for completing your verification. Good luck with your job search!</p>
+
+<p>Best regards,<br>The Riderspool Team</p>
+{% endblock %}

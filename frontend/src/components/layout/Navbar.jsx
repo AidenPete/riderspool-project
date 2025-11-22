@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUser, selectIsAuthenticated, logoutUser } from '../../features/auth/authSlice';
 import { providersAPI } from '../../api';
+import { getMediaUrl } from '../../api/axios';
 import './Navbar.css';
 
 function Navbar() {
@@ -119,7 +120,7 @@ function Navbar() {
                   >
                     <div className="avatar">
                       {profilePhoto ? (
-                        <img src={profilePhoto} alt="Profile" className="avatar-image" />
+                        <img src={getMediaUrl(profilePhoto)} alt="Profile" className="avatar-image" />
                       ) : (
                         getInitials()
                       )}
@@ -142,7 +143,7 @@ function Navbar() {
                         <div className="dropdown-user-info">
                           <div className="avatar-large">
                             {profilePhoto ? (
-                              <img src={profilePhoto} alt="Profile" className="avatar-image" />
+                              <img src={getMediaUrl(profilePhoto)} alt="Profile" className="avatar-image" />
                             ) : (
                               getInitials()
                             )}

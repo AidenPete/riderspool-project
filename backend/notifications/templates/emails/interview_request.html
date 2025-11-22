@@ -1,0 +1,26 @@
+{% extends "emails/base.html" %}
+{% block title %}New Interview Request{% endblock %}
+{% block content %}
+<h2>New Interview Request</h2>
+
+<p>Hello {{ name }},</p>
+
+<p>Great news! You have received a new interview request from <strong>{{ employer_name }}</strong>.</p>
+
+<div class="info-box">
+    <p><strong>Interview Details:</strong></p>
+    <p><strong>Date:</strong> {{ interview_date }}</p>
+    <p><strong>Time:</strong> {{ interview_time }}</p>
+    <p><strong>Location:</strong> {{ office_location }}</p>
+    {% if office_address %}<p><strong>Address:</strong> {{ office_address }}</p>{% endif %}
+    {% if notes %}<p><strong>Notes:</strong> {{ notes }}</p>{% endif %}
+</div>
+
+<p>Please log in to your account to confirm or respond to this interview request.</p>
+
+<a href="{{ frontend_url }}/interviews" class="btn">View Interview Request</a>
+
+<p>If you're unable to attend at the scheduled time, you can reschedule or decline the interview through your dashboard.</p>
+
+<p>Best regards,<br>The Riderspool Team</p>
+{% endblock %}

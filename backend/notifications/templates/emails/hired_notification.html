@@ -1,0 +1,26 @@
+{% extends "emails/base.html" %}
+{% block title %}Congratulations - You've Been Hired!{% endblock %}
+{% block content %}
+<h2>Congratulations!</h2>
+
+<p>Hello {{ name }},</p>
+
+<div class="success-box">
+    <p><strong>Great news!</strong> You have been hired by <strong>{{ employer_name }}</strong>!</p>
+</div>
+
+<p>Following your interview on {{ interview_date }}, the employer has decided to move forward with you.</p>
+
+<p>Here's what happens next:</p>
+<ul>
+    <li>The employer now has access to your contact information</li>
+    <li>They will reach out to you directly to discuss next steps</li>
+    <li>Make sure your contact details are up to date in your profile</li>
+</ul>
+
+<a href="{{ frontend_url }}/provider/profile" class="btn">Update My Profile</a>
+
+<p>Congratulations once again, and best of luck with your new opportunity!</p>
+
+<p>Best regards,<br>The Riderspool Team</p>
+{% endblock %}

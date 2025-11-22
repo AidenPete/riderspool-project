@@ -1,0 +1,25 @@
+{% extends "emails/base.html" %}
+{% block title %}Interview Rescheduled{% endblock %}
+{% block content %}
+<h2>Interview Rescheduled</h2>
+
+<p>Hello {{ name }},</p>
+
+<p>Your interview has been rescheduled by <strong>{{ rescheduled_by }}</strong>.</p>
+
+<div class="info-box">
+    <p><strong>New Interview Details:</strong></p>
+    <p><strong>New Date:</strong> {{ new_date }}</p>
+    <p><strong>New Time:</strong> {{ new_time }}</p>
+    <p><strong>Location:</strong> {{ office_location }}</p>
+    <p><strong>Reason for Rescheduling:</strong> {{ reschedule_reason }}</p>
+</div>
+
+<p>Please log in to your account to confirm the new interview time.</p>
+
+<a href="{{ frontend_url }}/interviews" class="btn">View Interview</a>
+
+<p>If the new time doesn't work for you, you can propose an alternative through your dashboard.</p>
+
+<p>Best regards,<br>The Riderspool Team</p>
+{% endblock %}

@@ -5,7 +5,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     RegisterView, LoginView, LogoutView, CurrentUserView,
     ChangePasswordView, UserViewSet, ProviderProfileViewSet,
-    EmployerProfileViewSet, SavedProviderViewSet
+    EmployerProfileViewSet, SavedProviderViewSet,
+    ForgotPasswordView, ResetPasswordView
 )
 from .admin_views import admin_dashboard_stats, admin_interview_analytics
 
@@ -24,6 +25,8 @@ urlpatterns = [
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth/me/', CurrentUserView.as_view(), name='current-user'),
     path('auth/change-password/', ChangePasswordView.as_view(), name='change-password'),
+    path('auth/forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
+    path('auth/reset-password/', ResetPasswordView.as_view(), name='reset-password'),
 
     # Admin endpoints
     path('admin/dashboard/stats/', admin_dashboard_stats, name='admin-dashboard-stats'),

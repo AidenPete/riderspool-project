@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
 import { providersAPI } from '../api';
+import { getMediaUrl } from '../api/axios';
 import { calculateProfileCompletion } from '../utils/profileCompletion';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
@@ -25,6 +26,8 @@ function ProfileCompletion() {
     idNumber: '',
     licenseNumber: '',
     bio: '',
+    willingToRelocate: false,
+    preferredLocations: '',
 
     // Skills
     additionalSkills: [],
@@ -74,6 +77,8 @@ function ProfileCompletion() {
         if (data.idNumber) setFormData(prev => ({ ...prev, idNumber: data.idNumber }));
         if (data.licenseNumber) setFormData(prev => ({ ...prev, licenseNumber: data.licenseNumber }));
         if (data.bio) setFormData(prev => ({ ...prev, bio: data.bio }));
+        if (data.willingToRelocate !== undefined) setFormData(prev => ({ ...prev, willingToRelocate: data.willingToRelocate }));
+        if (data.preferredLocations) setFormData(prev => ({ ...prev, preferredLocations: data.preferredLocations }));
         if (data.skills) {
           const skillsArray = data.skills.split(',').map(s => s.trim());
           setFormData(prev => ({ ...prev, additionalSkills: skillsArray }));
@@ -254,7 +259,7 @@ function ProfileCompletion() {
           <div className="profile-photo-preview">
             {(formData.profilePhoto || profileData?.profilePhoto) ? (
               <img
-                src={formData.profilePhoto ? URL.createObjectURL(formData.profilePhoto) : profileData?.profilePhoto}
+                src={formData.profilePhoto ? URL.createObjectURL(formData.profilePhoto) : getMediaUrl(profileData?.profilePhoto)}
                 alt="Profile"
                 className="profile-avatar-large"
               />
@@ -447,6 +452,32 @@ function ProfileCompletion() {
                     required
                   />
                 </div>
+
+                <div className="form-group full-width">
+                  <label>Preferred Working Locations</label>
+                  <input
+                    type="text"
+                    name="preferredLocations"
+                    value={formData.preferredLocations}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Nairobi, Mombasa, Kisumu"
+                  />
+                  <small className="field-hint">Enter cities or regions where you prefer to work (comma-separated)</small>
+                </div>
+
+                <div className="form-group full-width">
+                  <div className="checkbox-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        name="willingToRelocate"
+                        checked={formData.willingToRelocate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, willingToRelocate: e.target.checked }))}
+                      />
+                      <span>I am willing to relocate for work</span>
+                    </label>
+                  </div>
+                </div>
               </div>
             </Card>
           )}
@@ -616,6 +647,14 @@ function ProfileCompletion() {
                 <div className="info-item">
                   <label>Driver's License Number</label>
                   <div className="info-value">{profileData?.licenseNumber || 'Not provided'}</div>
+                </div>
+                <div className="info-item">
+                  <label>Preferred Working Locations</label>
+                  <div className="info-value">{profileData?.preferredLocations || 'Not specified'}</div>
+                </div>
+                <div className="info-item">
+                  <label>Willing to Relocate</label>
+                  <div className="info-value">{profileData?.willingToRelocate ? 'Yes' : 'No'}</div>
                 </div>
               </div>
               <div className="card-actions">

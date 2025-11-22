@@ -3,6 +3,20 @@ import axios from 'axios';
 // API base URL
 const BASE_URL = 'http://127.0.0.1:8000/api/';
 
+// Backend base URL for media files
+export const BACKEND_URL = 'http://127.0.0.1:8000';
+
+// Helper function to get full media URL
+export const getMediaUrl = (path) => {
+  if (!path) return null;
+  // If already a full URL, return as is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  // Otherwise prepend backend URL
+  return `${BACKEND_URL}${path}`;
+};
+
 // Create axios instance
 const api = axios.create({
   baseURL: BASE_URL,

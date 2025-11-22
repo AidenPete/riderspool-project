@@ -57,6 +57,7 @@
 
 .btn-primary:hover {
   background: var(--primary-dark);
+  color: white;
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -115,6 +116,7 @@
   font-weight: 800;
   margin-bottom: 1.5rem;
   line-height: 1.2;
+  color: white;
 }
 
 .hero-subtitle {
@@ -122,6 +124,7 @@
   margin-bottom: 2.5rem;
   opacity: 0.95;
   line-height: 1.6;
+  color: white;
 }
 
 .hero-buttons {
@@ -129,6 +132,28 @@
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+/* Hero Button Overrides */
+.hero .btn-primary {
+  background: white;
+  color: var(--primary);
+}
+
+.hero .btn-primary:hover {
+  background: #f1f5f9;
+  color: var(--primary-dark);
+}
+
+.hero .btn-secondary {
+  background: transparent;
+  color: white;
+  border-color: white;
+}
+
+.hero .btn-secondary:hover {
+  background: white;
+  color: var(--secondary-dark);
 }
 
 /* Features Section */
@@ -280,6 +305,17 @@
   font-size: 1.25rem;
   margin-bottom: var(--spacing-xl);
   opacity: 0.95;
+}
+
+/* CTA Button Styles */
+.cta .btn-primary {
+  background: white;
+  color: var(--primary);
+}
+
+.cta .btn-primary:hover {
+  background: #f1f5f9;
+  color: var(--primary-dark);
 }
 
 /* Footer */
@@ -483,7 +519,7 @@
 
 /* Tips Section (for logged-in providers) */
 .tips-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
   padding: 4rem 0;
   color: white;
 }
@@ -587,12 +623,12 @@
   left: 0;
   top: -5px;
   font-size: 3rem;
-  color: #2563eb;
+  color: var(--primary);
   opacity: 0.3;
 }
 
 .story-author {
-  color: #6b7280;
+  color: var(--gray-600);
   font-weight: 600;
   text-align: right;
 }

@@ -1,0 +1,44 @@
+{% extends "emails/base.html" %}
+{% block title %}Welcome to Riderspool{% endblock %}
+{% block content %}
+<h2>Welcome to Riderspool, {{ name }}!</h2>
+
+<p>Thank you for joining Riderspool - your trusted platform for connecting with professional drivers and riders in Kenya.</p>
+
+{% if user_type == 'provider' %}
+<p>As a service provider, you can now:</p>
+<ul>
+    <li>Complete your profile to showcase your skills and experience</li>
+    <li>Upload your verification documents (National ID and Driver's License)</li>
+    <li>Receive interview requests from employers</li>
+    <li>Build your reputation through ratings and reviews</li>
+</ul>
+
+<div class="info-box">
+    <p><strong>Next Steps:</strong></p>
+    <p>Complete your profile and upload your documents to start receiving interview requests.</p>
+</div>
+
+<a href="{{ frontend_url }}/provider/profile" class="btn">Complete Your Profile</a>
+
+{% else %}
+<p>As an employer, you can now:</p>
+<ul>
+    <li>Search and browse verified service providers</li>
+    <li>Save providers to your favorites</li>
+    <li>Schedule interviews at our convenient office locations</li>
+    <li>Hire qualified professionals for your business</li>
+</ul>
+
+<div class="info-box">
+    <p><strong>Next Steps:</strong></p>
+    <p>Start browsing our verified providers and find the perfect match for your needs.</p>
+</div>
+
+<a href="{{ frontend_url }}/search" class="btn">Find Providers</a>
+{% endif %}
+
+<p>If you have any questions, feel free to reach out to our support team.</p>
+
+<p>Best regards,<br>The Riderspool Team</p>
+{% endblock %}

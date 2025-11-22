@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.validators import RegexValidator
+import uuid
+from datetime import timedelta
+from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
@@ -121,6 +124,8 @@ class ProviderProfile(models.Model):
     # Additional info
     skills = models.TextField(blank=True, null=True, help_text='Comma-separated skills')
     availability = models.BooleanField(default=True)
+    willingToRelocate = models.BooleanField(default=False, help_text='Willing to relocate for work')
+    preferredLocations = models.TextField(blank=True, null=True, help_text='Comma-separated preferred working locations')
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
     totalInterviews = models.IntegerField(default=0)
 
@@ -198,3 +203,31 @@ class SavedProvider(models.Model):
 
     def __str__(self):
         return f"{self.employer.fullName} saved {self.provider.fullName}"
+
+
+class PasswordResetToken(models.Model):
+    """Model for storing password reset tokens"""
+
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='password_reset_tokens')
+    token = models.CharField(max_length=100, unique=True, default=uuid.uuid4)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    expiresAt = models.DateTimeField()
+    isUsed = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'password_reset_tokens'
+        verbose_name = 'Password Reset Token'
+        verbose_name_plural = 'Password Reset Tokens'
+        ordering = ['-createdAt']
+
+    def save(self, *args, **kwargs):
+        if not self.expiresAt:
+            self.expiresAt = timezone.now() + timedelta(hours=24)
+        super().save(*args, **kwargs)
+
+    def is_valid(self):
+        """Check if token is valid (not expired and not used)"""
+        return not self.isUsed and timezone.now() < self.expiresAt
+
+    def __str__(self):
+        return f"Reset token for {self.user.email}"

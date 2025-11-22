@@ -13,6 +13,7 @@ from .serializers import (
     VerificationRejectSerializer, VerificationDocumentSerializer,
     VerificationDocumentUploadSerializer
 )
+from notifications.email_service import EmailService
 
 
 class VerificationViewSet(viewsets.ModelViewSet):
@@ -97,7 +98,11 @@ class VerificationViewSet(viewsets.ModelViewSet):
         verification.provider.isVerified = True
         verification.provider.save()
 
-        # TODO: Send notification to provider (email + SMS)
+        # Send email notification to provider
+        try:
+            EmailService.send_verification_approved_email(verification.provider)
+        except Exception as e:
+            print(f"Failed to send verification approved email: {e}")
 
         return Response(
             VerificationSerializer(verification).data,
@@ -132,7 +137,14 @@ class VerificationViewSet(viewsets.ModelViewSet):
         verification.adminNotes = serializer.validated_data.get('adminNotes', '')
         verification.save()
 
-        # TODO: Send notification to provider (email + SMS)
+        # Send email notification to provider
+        try:
+            EmailService.send_verification_rejected_email(
+                verification.provider,
+                verification.rejectionReason
+            )
+        except Exception as e:
+            print(f"Failed to send verification rejected email: {e}")
 
         return Response(
             VerificationSerializer(verification).data,

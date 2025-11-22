@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../../features/auth/authSlice';
 import { interviewsAPI } from '../../api';
+import { getMediaUrl } from '../../api/axios';
 import Button from '../common/Button';
 import './InterviewDetailModal.css';
 
@@ -96,6 +97,25 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
     }
   };
 
+  const handleMarkAsHired = async () => {
+    if (!window.confirm('Mark this provider as hired? This will grant you access to their sensitive information.')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await interviewsAPI.markAsHired(interview.id);
+      alert('Provider marked as hired successfully!');
+      if (onUpdate) onUpdate();
+      onClose();
+    } catch (error) {
+      console.error('Error marking as hired:', error);
+      alert(error.response?.data?.error || 'Failed to mark provider as hired. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderStars = (rating) => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
@@ -145,7 +165,7 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
             <div className="party-info">
               <div className="provider-avatar-small">
                 {otherParty?.profilePhoto ? (
-                  <img src={otherParty.profilePhoto} alt={displayName} />
+                  <img src={getMediaUrl(otherParty.profilePhoto)} alt={displayName} />
                 ) : (
                   <div className="avatar-placeholder-small">
                     {displayName.charAt(0).toUpperCase()}
@@ -324,6 +344,20 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
                 <Button variant="primary" onClick={handleConfirm} disabled={loading}>
                   Confirm Interview
                 </Button>
+              )}
+
+              {/* Employer can mark provider as hired for completed interviews */}
+              {isEmployer && interview.status === 'completed' && !interview.isHired && (
+                <Button variant="primary" onClick={handleMarkAsHired} disabled={loading}>
+                  Mark as Hired
+                </Button>
+              )}
+
+              {/* Show hired status if already hired */}
+              {interview.status === 'completed' && interview.isHired && (
+                <div className="hired-badge">
+                  ✓ Provider Hired
+                </div>
               )}
 
               {/* Both can reschedule confirmed/pending interviews */}

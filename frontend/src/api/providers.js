@@ -65,6 +65,12 @@ export const providersAPI = {
     const response = await api.delete(`saved-providers/unsave/${providerId}/`);
     return response.data;
   },
+
+  // Check if employer has hired provider
+  checkHasHired: async (providerId) => {
+    const response = await api.get(`providers/${providerId}/has-hired/`);
+    return response.data;
+  },
 };
 
 // Users API endpoints (admin)

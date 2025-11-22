@@ -1,0 +1,34 @@
+{% extends "emails/base.html" %}
+{% block title %}Document Verification Update{% endblock %}
+{% block content %}
+<h2>Document Verification Update</h2>
+
+<p>Hello {{ name }},</p>
+
+<p>We have reviewed your submitted documents and unfortunately, they could not be verified at this time.</p>
+
+<div class="alert-box">
+    <p><strong>Reason:</strong> {{ rejection_reason }}</p>
+</div>
+
+<p>Please review the feedback above and resubmit your documents. Common issues include:</p>
+<ul>
+    <li>Blurry or unclear images</li>
+    <li>Documents that are expired</li>
+    <li>Information doesn't match your profile</li>
+    <li>Documents partially cut off in the image</li>
+</ul>
+
+<p>To resubmit your documents:</p>
+<ol>
+    <li>Log in to your account</li>
+    <li>Go to your profile settings</li>
+    <li>Upload clear, high-quality images of your documents</li>
+</ol>
+
+<a href="{{ frontend_url }}/provider/profile" class="btn">Resubmit Documents</a>
+
+<p>If you have questions about the verification process, please contact our support team.</p>
+
+<p>Best regards,<br>The Riderspool Team</p>
+{% endblock %}

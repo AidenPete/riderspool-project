@@ -8,14 +8,15 @@ from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
-from .models import ProviderProfile, EmployerProfile, SavedProvider
+from .models import ProviderProfile, EmployerProfile, SavedProvider, PasswordResetToken
 from .serializers import (
     UserSerializer, RegisterSerializer, LoginSerializer,
     ProviderProfileSerializer, ProviderProfileCreateSerializer,
     ProviderListSerializer, EmployerProfileSerializer,
     EmployerProfileCreateSerializer, SavedProviderSerializer,
-    ChangePasswordSerializer
+    ChangePasswordSerializer, ForgotPasswordSerializer, ResetPasswordSerializer
 )
+from notifications.email_service import EmailService
 
 User = get_user_model()
 
@@ -33,6 +34,12 @@ class RegisterView(generics.CreateAPIView):
 
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
+
+        # Send welcome email
+        try:
+            EmailService.send_welcome_email(user)
+        except Exception as e:
+            print(f"Failed to send welcome email: {e}")
 
         return Response({
             'user': UserSerializer(user).data,
@@ -229,6 +236,30 @@ class ProviderProfileViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_404_NOT_FOUND
                 )
 
+    @action(detail=True, methods=['get'], url_path='has-hired')
+    def has_hired(self, request, pk=None):
+        """Check if current employer has hired this provider"""
+        from interviews.models import Interview
+
+        profile = self.get_object()
+
+        # Only allow employers to check
+        if not request.user.is_employer:
+            return Response(
+                {'error': 'Only employers can check hiring status'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Check if there's a completed interview where this employer hired the provider
+        has_hired = Interview.objects.filter(
+            employer=request.user,
+            provider=profile.user,
+            status='completed',
+            isHired=True
+        ).exists()
+
+        return Response({'hasHired': has_hired})
+
 
 class EmployerProfileViewSet(viewsets.ModelViewSet):
     """ViewSet for EmployerProfile model"""
@@ -377,4 +408,82 @@ class SavedProviderViewSet(viewsets.ModelViewSet):
             return Response(
                 {'error': 'Saved provider not found'},
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class ForgotPasswordView(generics.GenericAPIView):
+    """Request password reset email"""
+    permission_classes = [AllowAny]
+    serializer_class = ForgotPasswordSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+
+        try:
+            user = User.objects.get(email=email)
+
+            # Invalidate any existing tokens
+            PasswordResetToken.objects.filter(user=user, isUsed=False).update(isUsed=True)
+
+            # Create new token
+            token = PasswordResetToken.objects.create(user=user)
+
+            # Send email
+            try:
+                EmailService.send_password_reset_email(user, str(token.token))
+            except Exception as e:
+                print(f"Failed to send password reset email: {e}")
+
+            return Response({
+                'message': 'If an account exists with this email, a password reset link will be sent.'
+            }, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            # Return same message for security (don't reveal if email exists)
+            return Response({
+                'message': 'If an account exists with this email, a password reset link will be sent.'
+            }, status=status.HTTP_200_OK)
+
+
+class ResetPasswordView(generics.GenericAPIView):
+    """Reset password with token"""
+    permission_classes = [AllowAny]
+    serializer_class = ResetPasswordSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        token_string = serializer.validated_data['token']
+        new_password = serializer.validated_data['new_password']
+
+        try:
+            token = PasswordResetToken.objects.get(token=token_string)
+
+            if not token.is_valid():
+                return Response(
+                    {'error': 'This reset link has expired or already been used'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Reset password
+            user = token.user
+            user.set_password(new_password)
+            user.save()
+
+            # Mark token as used
+            token.isUsed = True
+            token.save()
+
+            return Response({
+                'message': 'Password reset successful. You can now login with your new password.'
+            }, status=status.HTTP_200_OK)
+
+        except PasswordResetToken.DoesNotExist:
+            return Response(
+                {'error': 'Invalid reset token'},
+                status=status.HTTP_400_BAD_REQUEST
             )

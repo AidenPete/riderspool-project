@@ -58,6 +58,12 @@ export const interviewsAPI = {
     return response.data;
   },
 
+  // Mark provider as hired (employer)
+  markAsHired: async (id) => {
+    const response = await api.post(`interviews/${id}/mark_hired/`);
+    return response.data;
+  },
+
   // Delete interview
   deleteInterview: async (id) => {
     const response = await api.delete(`interviews/${id}/`);

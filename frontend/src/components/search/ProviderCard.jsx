@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { savedProvidersAPI } from '../../api';
+import { getMediaUrl } from '../../api/axios';
 import Button from '../common/Button';
 import './ProviderCard.css';
 
@@ -45,7 +46,7 @@ function ProviderCard({ provider }) {
       <div className="provider-header">
         <div className="provider-avatar">
           {provider.profilePhoto ? (
-            <img src={provider.profilePhoto} alt={displayName} />
+            <img src={getMediaUrl(provider.profilePhoto)} alt={displayName} />
           ) : (
             <div className="avatar-placeholder">
               {displayName.charAt(0).toUpperCase()}

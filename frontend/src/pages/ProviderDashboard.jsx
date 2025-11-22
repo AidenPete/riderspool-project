@@ -201,19 +201,79 @@ function ProviderDashboard() {
             </Card>
           )}
 
-          {/* Pending Tasks */}
-          <Card title="Complete Your Profile">
-            <div className="task-list">
-              {pendingTasks.map(item => (
-                <div key={item.id} className="task-item">
-                  <span className="task-icon">{item.icon}</span>
-                  <span className="task-name">{item.task}</span>
-                  <Link to="/provider/profile">
-                    <Button variant="outline" size="small">Add</Button>
-                  </Link>
+          {/* Profile Verification Status */}
+          <Card title="Profile Verification">
+            <div className="verification-list">
+              <div className="verification-item-dash">
+                <span className={`verification-icon ${profileData?.profilePhoto ? 'verified' : 'pending'}`}>
+                  {profileData?.profilePhoto ? '✓' : '○'}
+                </span>
+                <div className="verification-info">
+                  <span className="verification-label">Profile Photo</span>
+                  <span className={`verification-status ${profileData?.profilePhoto ? 'complete' : 'incomplete'}`}>
+                    {profileData?.profilePhoto ? 'Uploaded' : 'Not uploaded'}
+                  </span>
                 </div>
-              ))}
+              </div>
+
+              <div className="verification-item-dash">
+                <span className={`verification-icon ${profileData?.idDocument ? 'verified' : 'pending'}`}>
+                  {profileData?.idDocument ? '✓' : '○'}
+                </span>
+                <div className="verification-info">
+                  <span className="verification-label">National ID</span>
+                  <span className={`verification-status ${profileData?.idDocument ? 'complete' : 'incomplete'}`}>
+                    {profileData?.idDocument ? 'Uploaded' : 'Not uploaded'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="verification-item-dash">
+                <span className={`verification-icon ${profileData?.licenseDocument ? 'verified' : 'pending'}`}>
+                  {profileData?.licenseDocument ? '✓' : '○'}
+                </span>
+                <div className="verification-info">
+                  <span className="verification-label">Driver's License</span>
+                  <span className={`verification-status ${profileData?.licenseDocument ? 'complete' : 'incomplete'}`}>
+                    {profileData?.licenseDocument ? 'Uploaded' : 'Not uploaded'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="verification-item-dash">
+                <span className={`verification-icon ${profileData?.bio ? 'verified' : 'pending'}`}>
+                  {profileData?.bio ? '✓' : '○'}
+                </span>
+                <div className="verification-info">
+                  <span className="verification-label">Professional Bio</span>
+                  <span className={`verification-status ${profileData?.bio ? 'complete' : 'incomplete'}`}>
+                    {profileData?.bio ? 'Added' : 'Not added'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="verification-item-dash">
+                <span className={`verification-icon ${profileData?.skills ? 'verified' : 'pending'}`}>
+                  {profileData?.skills ? '✓' : '○'}
+                </span>
+                <div className="verification-info">
+                  <span className="verification-label">Skills</span>
+                  <span className={`verification-status ${profileData?.skills ? 'complete' : 'incomplete'}`}>
+                    {profileData?.skills ? 'Added' : 'Not added'}
+                  </span>
+                </div>
+              </div>
             </div>
+
+            {pendingTasks.length > 0 && (
+              <div className="pending-tasks-footer">
+                <Link to="/provider/profile">
+                  <Button variant="primary" size="small" fullWidth>
+                    Complete Profile ({pendingTasks.length} items remaining)
+                  </Button>
+                </Link>
+              </div>
+            )}
           </Card>
 
           {/* Upcoming Interviews */}

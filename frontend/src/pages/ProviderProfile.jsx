@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
 import { providersAPI } from '../api';
+import { getMediaUrl } from '../api/axios';
 import Navbar from '../components/layout/Navbar';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -16,6 +17,8 @@ function ProviderProfile() {
   const [provider, setProvider] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [hasHired, setHasHired] = useState(false);
+  const [checkingHireStatus, setCheckingHireStatus] = useState(false);
 
   // Fetch provider data
   useEffect(() => {
@@ -35,6 +38,29 @@ function ProviderProfile() {
 
     fetchProvider();
   }, [id]);
+
+  // Check if employer has hired this provider
+  useEffect(() => {
+    const checkHireStatus = async () => {
+      // Only check if user is an employer
+      if (user && user.userType === 'employer' && id) {
+        try {
+          setCheckingHireStatus(true);
+          const response = await providersAPI.checkHasHired(id);
+          setHasHired(response.hasHired);
+        } catch (err) {
+          console.error('Error checking hire status:', err);
+          setHasHired(false);
+        } finally {
+          setCheckingHireStatus(false);
+        }
+      }
+    };
+
+    if (!loading && provider) {
+      checkHireStatus();
+    }
+  }, [user, id, loading, provider]);
 
   if (loading) {
     return (
@@ -117,7 +143,7 @@ function ProviderProfile() {
           <div className="profile-header-content">
             <div className="profile-avatar-large">
               {provider.profilePhoto ? (
-                <img src={provider.profilePhoto} alt={provider.user?.fullName || provider.registeredName} />
+                <img src={getMediaUrl(provider.profilePhoto)} alt={provider.user?.fullName || provider.registeredName} />
               ) : (
                 <div className="avatar-placeholder-large">
                   {(provider.user?.fullName || provider.registeredName || 'P').charAt(0).toUpperCase()}
@@ -237,24 +263,43 @@ function ProviderProfile() {
 
             {/* Additional Info */}
             <Card title="Additional Information">
-              <div className="info-list">
+              <div className={`info-list ${user?.userType === 'employer' && !hasHired ? 'blurred-content' : ''}`}>
                 <div className="info-item">
                   <span className="info-label">Registered Name:</span>
-                  <span className="info-value">{provider.fullName}</span>
+                  <span className="info-value">{provider.registeredName || provider.user?.fullName || 'N/A'}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Location:</span>
-                  <span className="info-value">{provider.city}, {provider.region}</span>
+                  <span className="info-label">ID Number:</span>
+                  <span className="info-value">{provider.idNumber || 'Not provided'}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Experience Level:</span>
-                  <span className="info-value">{provider.yearsExperience} years</span>
+                  <span className="info-label">License Number:</span>
+                  <span className="info-value">{provider.licenseNumber || 'Not provided'}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Availability:</span>
+                  <span className="info-value">
+                    <span className={`availability-indicator ${provider.availability ? 'available' : 'unavailable'}`}>
+                      {provider.availability ? '✓ Available' : '✗ Unavailable'}
+                    </span>
+                  </span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Willing to Relocate:</span>
                   <span className="info-value">{provider.willingToRelocate ? 'Yes' : 'No'}</span>
                 </div>
+                {provider.preferredLocations && (
+                  <div className="info-item">
+                    <span className="info-label">Preferred Locations:</span>
+                    <span className="info-value">{provider.preferredLocations}</span>
+                  </div>
+                )}
               </div>
+              {user?.userType === 'employer' && !hasHired && (
+                <div className="privacy-notice">
+                  <p>🔒 Sensitive information is hidden. You can view this after hiring the provider.</p>
+                </div>
+              )}
             </Card>
 
             {/* CTA Card */}
