@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, ProviderProfile, EmployerProfile, SavedProvider
+from .models import User, ProviderProfile, EmployerProfile, SavedProvider, UserSettings
 
 
 @admin.register(User)
@@ -51,3 +51,11 @@ class SavedProviderAdmin(admin.ModelAdmin):
     list_filter = ['savedAt']
     search_fields = ['employer__fullName', 'provider__fullName']
     readonly_fields = ['savedAt']
+
+
+@admin.register(UserSettings)
+class UserSettingsAdmin(admin.ModelAdmin):
+    list_display = ['user', 'emailNotifications', 'smsNotifications', 'availableWeekends', 'maxTravelDistance']
+    list_filter = ['emailNotifications', 'smsNotifications', 'availableWeekends', 'availableHolidays']
+    search_fields = ['user__fullName', 'user__email']
+    readonly_fields = ['createdAt', 'updatedAt']
