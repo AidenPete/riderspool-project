@@ -68,6 +68,52 @@ function UserManagement() {
     });
   };
 
+  const handleToggleActive = async (userId, currentStatus) => {
+    const action = currentStatus ? 'disable' : 'enable';
+    if (!window.confirm(`Are you sure you want to ${action} this user?`)) {
+      return;
+    }
+
+    try {
+      await api.post(`users/${userId}/toggle-active/`);
+      alert(`User ${action}d successfully`);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      alert(`Failed to ${action} user. Please try again.`);
+    }
+  };
+
+  const handleVerifyUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to verify this user?')) {
+      return;
+    }
+
+    try {
+      await api.post(`users/${userId}/verify/`);
+      alert('User verified successfully');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error verifying user:', error);
+      alert('Failed to verify user. Please try again.');
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await api.delete(`users/${userId}/`);
+      alert('User deleted successfully');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Failed to delete user. Please try again.');
+    }
+  };
+
   const counts = getTabCounts();
 
   if (loading) {
@@ -135,8 +181,8 @@ function UserManagement() {
                 <th>Type</th>
                 <th>Category/Industry</th>
                 <th>Verified</th>
-                <th>Joined</th>
-                <th>Last Active</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -163,8 +209,39 @@ function UserManagement() {
                         {user.isVerified ? '✓ Verified' : 'Pending'}
                       </span>
                     </td>
-                    <td>{formatDate(user.dateJoined)}</td>
-                    <td>{formatDate(user.lastActive)}</td>
+                    <td>
+                      <span className={`status-badge ${user.is_active ? 'status-confirmed' : 'status-cancelled'}`}>
+                        {user.is_active ? 'Active' : 'Disabled'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="table-actions" style={{ display: 'flex', gap: '5px' }}>
+                        <button
+                          className="action-btn"
+                          onClick={() => handleToggleActive(user.id, user.is_active)}
+                          title={user.is_active ? 'Disable User' : 'Enable User'}
+                        >
+                          {user.is_active ? '🚫' : '✅'}
+                        </button>
+                        {!user.isVerified && (
+                          <button
+                            className="action-btn"
+                            onClick={() => handleVerifyUser(user.id)}
+                            title="Verify User"
+                          >
+                            ✓
+                          </button>
+                        )}
+                        <button
+                          className="action-btn"
+                          onClick={() => handleDeleteUser(user.id)}
+                          title="Delete User"
+                          style={{ color: '#ef4444' }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (

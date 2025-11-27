@@ -69,6 +69,35 @@ function InterviewManagement() {
     return { date, time: timeString || 'N/A' };
   };
 
+  const handleCancelInterview = async (interviewId) => {
+    const reason = window.prompt('Please provide a reason for cancelling this interview:');
+    if (!reason) return;
+
+    try {
+      await api.post(`interviews/${interviewId}/cancel/`, { cancellationReason: reason });
+      alert('Interview cancelled successfully');
+      fetchInterviews();
+    } catch (error) {
+      console.error('Error cancelling interview:', error);
+      alert('Failed to cancel interview. Please try again.');
+    }
+  };
+
+  const handleDeleteInterview = async (interviewId) => {
+    if (!window.confirm('Are you sure you want to delete this interview? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await api.delete(`interviews/${interviewId}/`);
+      alert('Interview deleted successfully');
+      fetchInterviews();
+    } catch (error) {
+      console.error('Error deleting interview:', error);
+      alert('Failed to delete interview. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -115,7 +144,7 @@ function InterviewManagement() {
                 <th>Date & Time</th>
                 <th>Office</th>
                 <th>Status</th>
-                <th>Hired</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -142,13 +171,45 @@ function InterviewManagement() {
                         <small>{time}</small>
                       </td>
                       <td>{officeName}</td>
-                      <td>{getStatusBadge(interview.status)}</td>
                       <td>
-                        {interview.status === 'completed' && (
-                          <span className={`badge ${interview.isHired ? 'badge-success' : 'badge-secondary'}`}>
-                            {interview.isHired ? '✓ Hired' : 'Not Hired'}
-                          </span>
-                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {getStatusBadge(interview.status)}
+                          {interview.status === 'completed' && interview.isHired && (
+                            <span className="badge badge-success" style={{ fontSize: '11px' }}>
+                              ✓ Hired
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="table-actions" style={{ display: 'flex', gap: '5px' }}>
+                          {interview.status === 'pending' && (
+                            <button
+                              className="action-btn"
+                              onClick={() => handleCancelInterview(interview.id)}
+                              title="Cancel Interview"
+                            >
+                              ❌
+                            </button>
+                          )}
+                          {interview.status === 'confirmed' && (
+                            <button
+                              className="action-btn"
+                              onClick={() => handleCancelInterview(interview.id)}
+                              title="Cancel Interview"
+                            >
+                              ❌
+                            </button>
+                          )}
+                          <button
+                            className="action-btn"
+                            onClick={() => handleDeleteInterview(interview.id)}
+                            title="Delete Interview"
+                            style={{ color: '#ef4444' }}
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

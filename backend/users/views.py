@@ -142,6 +142,31 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         return User.objects.filter(id=user.id)
 
+    @action(detail=True, methods=['post'], url_path='toggle-active')
+    def toggle_active(self, request, pk=None):
+        """Enable or disable a user account"""
+        user = self.get_object()
+        user.is_active = not user.is_active
+        user.save()
+
+        action_text = 'enabled' if user.is_active else 'disabled'
+        return Response({
+            'message': f'User {action_text} successfully',
+            'is_active': user.is_active
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='verify')
+    def verify_user(self, request, pk=None):
+        """Manually verify a user"""
+        user = self.get_object()
+        user.isVerified = True
+        user.save()
+
+        return Response({
+            'message': 'User verified successfully',
+            'isVerified': user.isVerified
+        }, status=status.HTTP_200_OK)
+
 
 class ProviderProfileViewSet(viewsets.ModelViewSet):
     """ViewSet for ProviderProfile model"""
