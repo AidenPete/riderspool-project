@@ -136,14 +136,22 @@ class InterviewListSerializer(serializers.ModelSerializer):
     employer = UserSerializer(read_only=True)
     provider = serializers.SerializerMethodField(read_only=True)
     officeLocation = OfficeLocationSerializer(read_only=True)
+    feedback = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Interview
         fields = [
             'id', 'employer', 'provider', 'date', 'time',
             'officeLocation', 'status', 'notes', 'cancellationReason',
-            'rescheduleReason', 'createdAt', 'updatedAt'
+            'rescheduleReason', 'isHired', 'feedback', 'createdAt', 'updatedAt'
         ]
+
+    def get_feedback(self, obj):
+        """Get feedback if it exists"""
+        try:
+            return obj.feedback is not None
+        except InterviewFeedback.DoesNotExist:
+            return False
 
     def get_provider(self, obj):
         """Get provider profile data"""
@@ -204,7 +212,7 @@ class InterviewFeedbackSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterviewFeedback
-        fields = ['id', 'interview', 'rating', 'comments', 'wouldHireAgain', 'createdAt']
+        fields = ['id', 'interview', 'rating', 'comments', 'strengths', 'improvements', 'wouldHireAgain', 'createdAt']
         read_only_fields = ['id', 'interview', 'createdAt']
 
 
@@ -213,7 +221,7 @@ class InterviewFeedbackCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterviewFeedback
-        fields = ['rating', 'comments', 'wouldHireAgain']
+        fields = ['rating', 'comments', 'strengths', 'improvements', 'wouldHireAgain']
 
     def validate(self, attrs):
         """Validate feedback data"""

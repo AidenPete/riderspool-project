@@ -99,6 +99,8 @@ class InterviewFeedback(models.Model):
     interview = models.OneToOneField(Interview, on_delete=models.CASCADE, related_name='feedback')
     rating = models.IntegerField(choices=RATING_CHOICES)
     comments = models.TextField(blank=True, null=True)
+    strengths = models.TextField(blank=True, null=True, help_text='What the provider did well')
+    improvements = models.TextField(blank=True, null=True, help_text='Areas for improvement')
     wouldHireAgain = models.BooleanField(default=False)
 
     createdAt = models.DateTimeField(auto_now_add=True)
