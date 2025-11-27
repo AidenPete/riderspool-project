@@ -168,6 +168,19 @@ function Navbar() {
                         My Profile
                       </Link>
 
+                      {user?.userType === 'provider' && (
+                        <Link
+                          to="/verification"
+                          className="dropdown-item"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 0L10.5 5.5L16 6.5L12 10.5L13 16L8 13.5L3 16L4 10.5L0 6.5L5.5 5.5L8 0Z" fill="currentColor"/>
+                          </svg>
+                          Get Verified
+                        </Link>
+                      )}
+
                       {user?.userType === 'employer' && (
                         <Link
                           to="/bookings"
