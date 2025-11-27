@@ -15,6 +15,7 @@ import os
 import dj_database_url
 from datetime import timedelta
 from dotenv import load_dotenv
+from decouple import config
 
 # Load environment variables
 load_dotenv()
@@ -27,12 +28,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-jrfzig9_o4t-6tta7g$i3dwwy^x0oi_2n18@_gz=wic2f*b%_p')
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1]').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,[::1]').split(',')
 
 
 # Application definition
@@ -95,10 +96,10 @@ WSGI_APPLICATION = 'riderspool_backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Use PostgreSQL in production, SQLite in development
-if os.getenv('DATABASE_URL'):
+if config('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.getenv('DATABASE_URL'),
+            default=config('DATABASE_URL'),
             conn_max_age=600,
             conn_health_checks=True,
         )
