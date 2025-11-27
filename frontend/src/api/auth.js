@@ -47,6 +47,18 @@ export const authAPI = {
     });
     return response.data;
   },
+
+  // Get user settings
+  getSettings: async () => {
+    const response = await api.get('settings/');
+    return response.data;
+  },
+
+  // Update user settings
+  updateSettings: async (settingsData) => {
+    const response = await api.patch('settings/', settingsData);
+    return response.data;
+  },
 };
 
 export default authAPI;

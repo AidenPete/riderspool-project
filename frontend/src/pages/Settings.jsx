@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUser, updateUser } from '../features/auth/authSlice';
 import { authAPI } from '../api';
@@ -12,6 +12,7 @@ function Settings() {
   const user = useSelector(selectUser);
   const [activeSection, setActiveSection] = useState('account');
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     // Account
@@ -41,6 +42,34 @@ function Settings() {
 
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const regions = ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika', 'Malindi', 'Kitale'];
+
+  // Load settings on component mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await authAPI.getSettings();
+        setFormData(prev => ({
+          ...prev,
+          workingDays: settings.workingDays || prev.workingDays,
+          workingHours: settings.workingHours || prev.workingHours,
+          availableWeekends: settings.availableWeekends || false,
+          availableHolidays: settings.availableHolidays || false,
+          emailNotifications: settings.emailNotifications !== undefined ? settings.emailNotifications : true,
+          smsNotifications: settings.smsNotifications || false,
+          interviewAlerts: settings.interviewAlerts !== undefined ? settings.interviewAlerts : true,
+          marketingEmails: settings.marketingEmails || false,
+          preferredRegions: settings.preferredRegions || [],
+          maxTravelDistance: String(settings.maxTravelDistance || 50),
+        }));
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   // Sections based on user type
   const sections = user?.userType === 'provider'
@@ -121,14 +150,28 @@ function Settings() {
         }
       }
 
-      // Update other settings (phone, availability, notifications, etc.)
+      // Update phone if changed
       if (formData.phone !== user?.phone) {
         await authAPI.updateCurrentUser({ phone: formData.phone });
         dispatch(updateUser({ ...user, phone: formData.phone }));
       }
 
-      // TODO: Save other settings (availability, notifications, location preferences)
-      // These would go to a separate settings endpoint if needed
+      // Save all other settings
+      const settingsData = {
+        workingDays: formData.workingDays,
+        workingHours: formData.workingHours,
+        availableWeekends: formData.availableWeekends,
+        availableHolidays: formData.availableHolidays,
+        emailNotifications: formData.emailNotifications,
+        smsNotifications: formData.smsNotifications,
+        interviewAlerts: formData.interviewAlerts,
+        marketingEmails: formData.marketingEmails,
+        preferredRegions: formData.preferredRegions,
+        maxTravelDistance: parseInt(formData.maxTravelDistance) || 50,
+        willingToRelocate: formData.willingToRelocate,
+      };
+
+      await authAPI.updateSettings(settingsData);
 
       alert('Settings saved successfully!');
     } catch (error) {
@@ -138,6 +181,20 @@ function Settings() {
       setIsSaving(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="settings-page">
+        <Navbar />
+        <div className="settings-container">
+          <div className="settings-header">
+            <h1>Settings</h1>
+            <p>Loading your preferences...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="settings-page">

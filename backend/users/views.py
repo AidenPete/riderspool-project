@@ -8,13 +8,14 @@ from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 
-from .models import ProviderProfile, EmployerProfile, SavedProvider, PasswordResetToken
+from .models import ProviderProfile, EmployerProfile, SavedProvider, PasswordResetToken, UserSettings
 from .serializers import (
     UserSerializer, RegisterSerializer, LoginSerializer,
     ProviderProfileSerializer, ProviderProfileCreateSerializer,
     ProviderListSerializer, EmployerProfileSerializer,
     EmployerProfileCreateSerializer, SavedProviderSerializer,
-    ChangePasswordSerializer, ForgotPasswordSerializer, ResetPasswordSerializer
+    ChangePasswordSerializer, ForgotPasswordSerializer, ResetPasswordSerializer,
+    UserSettingsSerializer
 )
 from notifications.email_service import EmailService
 
@@ -487,3 +488,15 @@ class ResetPasswordView(generics.GenericAPIView):
                 {'error': 'Invalid reset token'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+
+class UserSettingsView(generics.RetrieveUpdateAPIView):
+    """Get or update user settings"""
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSettingsSerializer
+
+    def get_object(self):
+        """Get or create settings for current user"""
+        settings, created = UserSettings.objects.get_or_create(user=self.request.user)
+        return settings

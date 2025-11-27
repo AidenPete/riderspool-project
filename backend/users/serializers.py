@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, ProviderProfile, EmployerProfile, SavedProvider
+from .models import User, ProviderProfile, EmployerProfile, SavedProvider, UserSettings
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -229,3 +229,16 @@ class ResetPasswordSerializer(serializers.Serializer):
         if attrs['new_password'] != attrs['new_password2']:
             raise serializers.ValidationError({"new_password": "Passwords do not match"})
         return attrs
+
+
+class UserSettingsSerializer(serializers.ModelSerializer):
+    """Serializer for user settings"""
+
+    class Meta:
+        model = UserSettings
+        fields = [
+            'id', 'workingDays', 'workingHours', 'availableWeekends', 'availableHolidays',
+            'emailNotifications', 'smsNotifications', 'interviewAlerts', 'marketingEmails',
+            'preferredRegions', 'maxTravelDistance', 'createdAt', 'updatedAt'
+        ]
+        read_only_fields = ['id', 'createdAt', 'updatedAt']

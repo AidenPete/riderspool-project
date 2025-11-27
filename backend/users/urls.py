@@ -6,7 +6,7 @@ from .views import (
     RegisterView, LoginView, LogoutView, CurrentUserView,
     ChangePasswordView, UserViewSet, ProviderProfileViewSet,
     EmployerProfileViewSet, SavedProviderViewSet,
-    ForgotPasswordView, ResetPasswordView
+    ForgotPasswordView, ResetPasswordView, UserSettingsView
 )
 from .admin_views import admin_dashboard_stats, admin_interview_analytics
 
@@ -27,6 +27,9 @@ urlpatterns = [
     path('auth/change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('auth/forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
     path('auth/reset-password/', ResetPasswordView.as_view(), name='reset-password'),
+
+    # Settings endpoint
+    path('settings/', UserSettingsView.as_view(), name='user-settings'),
 
     # Admin endpoints
     path('admin/dashboard/stats/', admin_dashboard_stats, name='admin-dashboard-stats'),

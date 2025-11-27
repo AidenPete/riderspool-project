@@ -231,3 +231,37 @@ class PasswordResetToken(models.Model):
 
     def __str__(self):
         return f"Reset token for {self.user.email}"
+
+
+class UserSettings(models.Model):
+    """Model for storing user preferences and settings"""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='settings')
+
+    # Availability settings (for providers)
+    workingDays = models.JSONField(default=list, blank=True, help_text='List of working days')
+    workingHours = models.JSONField(default=dict, blank=True, help_text='Start and end times')
+    availableWeekends = models.BooleanField(default=False)
+    availableHolidays = models.BooleanField(default=False)
+
+    # Notification preferences
+    emailNotifications = models.BooleanField(default=True)
+    smsNotifications = models.BooleanField(default=False)
+    interviewAlerts = models.BooleanField(default=True)
+    marketingEmails = models.BooleanField(default=False)
+
+    # Location preferences (for providers)
+    preferredRegions = models.JSONField(default=list, blank=True, help_text='List of preferred work regions')
+    maxTravelDistance = models.IntegerField(default=50, help_text='Maximum travel distance in km')
+
+    # Timestamps
+    createdAt = models.DateTimeField(auto_now_add=True)
+    updatedAt = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'user_settings'
+        verbose_name = 'User Settings'
+        verbose_name_plural = 'User Settings'
+
+    def __str__(self):
+        return f"Settings for {self.user.fullName}"

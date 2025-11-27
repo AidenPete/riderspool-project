@@ -3,7 +3,11 @@
     "allow": [
       "Bash(npx tsc:*)",
       "Bash(curl:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(echo:*)",
+      "Bash(/Users/aidenpete/Desktop/riderspool-project/backend/users/views.py)",
+      "Bash(source venv/bin/activate)",
+      "Bash(python manage.py makemigrations:*)"
     ],
     "deny": [],
     "ask": []
