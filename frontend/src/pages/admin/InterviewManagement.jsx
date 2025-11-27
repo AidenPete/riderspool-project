@@ -1,64 +1,83 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Card from '../../components/common/Card';
+import api from '../../api/axios';
 import './InterviewManagement.css';
 
 function InterviewManagement() {
+  const [interviews, setInterviews] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
 
-  const mockInterviews = [
-    {
-      id: 1,
-      employer: 'ABC Construction Ltd',
-      provider: 'John Kamau',
-      providerCategory: 'Motorbike Rider',
-      date: '2025-01-28',
-      time: '10:00 AM',
-      office: 'Nairobi - Westlands Office',
-      status: 'confirmed',
-    },
-    {
-      id: 2,
-      employer: 'Tech Solutions Inc',
-      provider: 'Mary Wanjiku',
-      providerCategory: 'Car Driver',
-      date: '2025-01-30',
-      time: '2:00 PM',
-      office: 'Nairobi - CBD Office',
-      status: 'pending',
-    },
-    {
-      id: 3,
-      employer: 'Global Logistics',
-      provider: 'Peter Omondi',
-      providerCategory: 'Truck Driver',
-      date: '2025-01-15',
-      time: '11:00 AM',
-      office: 'Mombasa Office',
-      status: 'completed',
-    },
-  ];
+  useEffect(() => {
+    fetchInterviews();
+  }, []);
 
-  const [interviews] = useState(mockInterviews);
+  const fetchInterviews = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('interviews/');
+      const interviewsData = response.data.results || response.data || [];
+      setInterviews(interviewsData);
+    } catch (error) {
+      console.error('Error fetching interviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTabCounts = () => ({
+    all: interviews.length,
+    pending: interviews.filter(i => i.status === 'pending').length,
+    confirmed: interviews.filter(i => i.status === 'confirmed').length,
+    completed: interviews.filter(i => i.status === 'completed').length,
+    cancelled: interviews.filter(i => i.status === 'cancelled').length,
+  });
+
+  const counts = getTabCounts();
 
   const tabs = [
-    { id: 'all', label: 'All', count: interviews.length },
-    { id: 'pending', label: 'Pending', count: interviews.filter(i => i.status === 'pending').length },
-    { id: 'confirmed', label: 'Confirmed', count: interviews.filter(i => i.status === 'confirmed').length },
-    { id: 'completed', label: 'Completed', count: interviews.filter(i => i.status === 'completed').length },
+    { id: 'all', label: 'All', count: counts.all },
+    { id: 'pending', label: 'Pending', count: counts.pending },
+    { id: 'confirmed', label: 'Confirmed', count: counts.confirmed },
+    { id: 'completed', label: 'Completed', count: counts.completed },
+    { id: 'cancelled', label: 'Cancelled', count: counts.cancelled },
   ];
 
-  const filteredInterviews = activeTab === 'all' ? interviews : interviews.filter(i => i.status === activeTab);
+  const filteredInterviews = activeTab === 'all'
+    ? interviews
+    : interviews.filter(i => i.status === activeTab);
 
   const getStatusBadge = (status) => {
     const statusMap = {
       pending: { label: 'Pending', class: 'status-pending' },
       confirmed: { label: 'Confirmed', class: 'status-confirmed' },
       completed: { label: 'Completed', class: 'status-completed' },
+      cancelled: { label: 'Cancelled', class: 'status-cancelled' },
     };
-    const config = statusMap[status];
+    const config = statusMap[status] || { label: status, class: 'status-default' };
     return <span className={`status-badge ${config.class}`}>{config.label}</span>;
   };
+
+  const formatDateTime = (dateString, timeString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+    return { date, time: timeString || 'N/A' };
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="interview-management">
+          <div className="loading-message">Loading interviews...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -68,7 +87,9 @@ function InterviewManagement() {
             <h1>Interview Management</h1>
             <p>Monitor and manage all interviews</p>
           </div>
-          <button className="btn btn-outline">📊 Export Data</button>
+          <button className="btn btn-outline" onClick={fetchInterviews}>
+            🔄 Refresh
+          </button>
         </div>
 
         <div className="admin-tabs">
@@ -94,37 +115,58 @@ function InterviewManagement() {
                 <th>Date & Time</th>
                 <th>Office</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th>Hired</th>
               </tr>
             </thead>
             <tbody>
-              {filteredInterviews.map(interview => (
-                <tr key={interview.id}>
-                  <td>#{interview.id}</td>
-                  <td>{interview.employer}</td>
-                  <td>
-                    <div>
-                      <div className="user-name">{interview.provider}</div>
-                      <div className="user-category">{interview.providerCategory}</div>
-                    </div>
-                  </td>
-                  <td>
-                    {new Date(interview.date).toLocaleDateString()}<br />
-                    <small>{interview.time}</small>
-                  </td>
-                  <td>{interview.office}</td>
-                  <td>{getStatusBadge(interview.status)}</td>
-                  <td>
-                    <div className="table-actions">
-                      <button className="action-btn view" title="View Details">👁️</button>
-                      <button className="action-btn" title="Cancel">❌</button>
-                    </div>
+              {filteredInterviews.length > 0 ? (
+                filteredInterviews.map(interview => {
+                  const { date, time } = formatDateTime(interview.scheduledDate, interview.scheduledTime);
+                  const employerName = interview.employer?.companyName || interview.employer?.fullName || 'N/A';
+                  const providerName = interview.provider?.name || 'N/A';
+                  const providerCategory = interview.provider?.category || 'N/A';
+                  const officeName = interview.office?.name || 'N/A';
+
+                  return (
+                    <tr key={interview.id}>
+                      <td>#{interview.id}</td>
+                      <td>{employerName}</td>
+                      <td>
+                        <div>
+                          <div className="user-name">{providerName}</div>
+                          <div className="user-category">{providerCategory}</div>
+                        </div>
+                      </td>
+                      <td>
+                        {date}<br />
+                        <small>{time}</small>
+                      </td>
+                      <td>{officeName}</td>
+                      <td>{getStatusBadge(interview.status)}</td>
+                      <td>
+                        {interview.status === 'completed' && (
+                          <span className={`badge ${interview.isHired ? 'badge-success' : 'badge-secondary'}`}>
+                            {interview.isHired ? '✓ Hired' : 'Not Hired'}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="7" className="empty-state-row">
+                    No interviews found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </Card>
+
+        <div className="table-footer">
+          <p>Showing {filteredInterviews.length} of {interviews.length} interviews</p>
+        </div>
       </div>
     </AdminLayout>
   );

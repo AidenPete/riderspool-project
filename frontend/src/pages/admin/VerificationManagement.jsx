@@ -1,55 +1,111 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import api from '../../api/axios';
 import './VerificationManagement.css';
 
 function VerificationManagement() {
-  const mockVerifications = [
-    {
-      id: 1,
-      providerName: 'Peter Omondi',
-      category: 'Truck Driver',
-      email: 'peter.o@email.com',
-      submittedAt: '2025-01-18',
-      documents: {
-        nationalId: { status: 'submitted', url: '/docs/id-1.pdf' },
-        license: { status: 'submitted', url: '/docs/license-1.pdf' },
-        photo: { status: 'submitted', url: '/docs/photo-1.jpg' },
-      },
-    },
-    {
-      id: 2,
-      providerName: 'Grace Achieng',
-      category: 'Motorbike Rider',
-      email: 'grace.a@email.com',
-      submittedAt: '2025-01-18',
-      documents: {
-        nationalId: { status: 'submitted', url: '/docs/id-2.pdf' },
-        license: { status: 'submitted', url: '/docs/license-2.pdf' },
-        photo: { status: 'pending', url: null },
-      },
-    },
+  const [verifications, setVerifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('pending');
+
+  useEffect(() => {
+    fetchVerifications();
+  }, []);
+
+  const fetchVerifications = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('verifications/');
+      const verificationsData = response.data.results || response.data || [];
+      setVerifications(verificationsData);
+    } catch (error) {
+      console.error('Error fetching verifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTabCounts = () => ({
+    all: verifications.length,
+    pending: verifications.filter(v => v.status === 'pending').length,
+    approved: verifications.filter(v => v.status === 'approved').length,
+    rejected: verifications.filter(v => v.status === 'rejected').length,
+  });
+
+  const counts = getTabCounts();
+
+  const tabs = [
+    { id: 'pending', label: 'Pending', count: counts.pending },
+    { id: 'approved', label: 'Approved', count: counts.approved },
+    { id: 'rejected', label: 'Rejected', count: counts.rejected },
+    { id: 'all', label: 'All', count: counts.all },
   ];
 
-  const [verifications, setVerifications] = useState(mockVerifications);
+  const filteredVerifications = activeTab === 'all'
+    ? verifications
+    : verifications.filter(v => v.status === activeTab);
 
-  const handleApprove = (id) => {
-    if (confirm('Are you sure you want to approve this provider?')) {
-      console.log('Approve verification:', id);
-      alert('✅ Provider verified successfully! Email and SMS notifications sent.');
-      // TODO: API call to approve
+  const handleApprove = async (id) => {
+    if (!window.confirm('Are you sure you want to approve this provider?')) {
+      return;
+    }
+
+    try {
+      await api.post(`verifications/${id}/approve/`);
+      alert('Provider verified successfully! Email and SMS notifications sent.');
+      fetchVerifications(); // Refresh the list
+    } catch (error) {
+      console.error('Error approving verification:', error);
+      alert('Failed to approve verification. Please try again.');
     }
   };
 
-  const handleReject = (id) => {
-    const reason = prompt('Please provide a reason for rejection:');
-    if (reason) {
-      console.log('Reject verification:', id, 'Reason:', reason);
-      alert('❌ Verification rejected. Provider will be notified with the reason.');
-      // TODO: API call to reject
+  const handleReject = async (id) => {
+    const reason = window.prompt('Please provide a reason for rejection:');
+    if (!reason) return;
+
+    try {
+      await api.post(`verifications/${id}/reject/`, { reason });
+      alert('Verification rejected. Provider will be notified with the reason.');
+      fetchVerifications(); // Refresh the list
+    } catch (error) {
+      console.error('Error rejecting verification:', error);
+      alert('Failed to reject verification. Please try again.');
     }
   };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      pending: { label: 'Pending Review', class: 'status-pending' },
+      approved: { label: 'Approved', class: 'status-approved' },
+      rejected: { label: 'Rejected', class: 'status-rejected' },
+    };
+    const config = statusMap[status] || { label: status, class: 'status-default' };
+    return <span className={`status-badge ${config.class}`}>{config.label}</span>;
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="verification-management">
+          <div className="loading-message">Loading verifications...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -59,87 +115,171 @@ function VerificationManagement() {
             <h1>Verification Management</h1>
             <p>Review and approve provider documents</p>
           </div>
+          <button className="btn btn-outline" onClick={fetchVerifications}>
+            🔄 Refresh
+          </button>
         </div>
 
-        <div className="verification-cards">
-          {verifications.map(verification => (
-            <Card key={verification.id} className="verification-card">
-              <div className="verification-header">
-                <div className="provider-info">
-                  <div className="provider-avatar">
-                    {verification.providerName.charAt(0)}
-                  </div>
-                  <div>
-                    <h3>{verification.providerName}</h3>
-                    <p>{verification.category}</p>
-                    <p className="provider-email">{verification.email}</p>
-                  </div>
-                </div>
-                <div className="submission-date">
-                  Submitted: {new Date(verification.submittedAt).toLocaleDateString()}
-                </div>
-              </div>
-
-              <div className="documents-section">
-                <h4>Submitted Documents:</h4>
-                <div className="documents-grid">
-                  <div className="document-item">
-                    <div className="document-label">
-                      <span className="doc-icon">🆔</span>
-                      National ID
-                    </div>
-                    {verification.documents.nationalId.status === 'submitted' ? (
-                      <button className="btn btn-sm btn-outline">View Document</button>
-                    ) : (
-                      <span className="doc-pending">Pending</span>
-                    )}
-                  </div>
-                  <div className="document-item">
-                    <div className="document-label">
-                      <span className="doc-icon">🪪</span>
-                      Driver's License
-                    </div>
-                    {verification.documents.license.status === 'submitted' ? (
-                      <button className="btn btn-sm btn-outline">View Document</button>
-                    ) : (
-                      <span className="doc-pending">Pending</span>
-                    )}
-                  </div>
-                  <div className="document-item">
-                    <div className="document-label">
-                      <span className="doc-icon">📸</span>
-                      Profile Photo
-                    </div>
-                    {verification.documents.photo.status === 'submitted' ? (
-                      <button className="btn btn-sm btn-outline">View Photo</button>
-                    ) : (
-                      <span className="doc-pending">Pending</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="verification-actions">
-                <Button variant="outline" onClick={() => handleReject(verification.id)}>
-                  ❌ Reject
-                </Button>
-                <Button variant="primary" onClick={() => handleApprove(verification.id)}>
-                  ✅ Approve
-                </Button>
-              </div>
-            </Card>
+        <div className="admin-tabs">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              className={`admin-tab ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+              <span className="tab-count">{tab.count}</span>
+            </button>
           ))}
         </div>
 
-        {verifications.length === 0 && (
-          <Card>
-            <div className="empty-state">
-              <div className="empty-icon">✅</div>
-              <h3>No pending verifications</h3>
-              <p>All providers have been verified</p>
-            </div>
-          </Card>
-        )}
+        <div className="verification-cards">
+          {filteredVerifications.length > 0 ? (
+            filteredVerifications.map(verification => {
+              const provider = verification.provider || {};
+              const providerName = provider.fullName || 'N/A';
+              const providerEmail = provider.email || 'N/A';
+              const providerCategory = provider.category || 'N/A';
+
+              return (
+                <Card key={verification.id} className="verification-card">
+                  <div className="verification-header">
+                    <div className="provider-info">
+                      <div className="provider-avatar">
+                        {providerName.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3>{providerName}</h3>
+                        <p>{providerCategory}</p>
+                        <p className="provider-email">{providerEmail}</p>
+                      </div>
+                    </div>
+                    <div className="verification-meta">
+                      {getStatusBadge(verification.status)}
+                      <div className="submission-date">
+                        Submitted: {formatDate(verification.submittedAt)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="documents-section">
+                    <h4>Submitted Documents:</h4>
+                    <div className="documents-grid">
+                      <div className="document-item">
+                        <div className="document-label">
+                          <span className="doc-icon">🆔</span>
+                          National ID
+                        </div>
+                        {verification.idDocument ? (
+                          <a
+                            href={verification.idDocument}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-sm btn-outline"
+                          >
+                            View Document
+                          </a>
+                        ) : (
+                          <span className="doc-pending">Not Submitted</span>
+                        )}
+                      </div>
+                      <div className="document-item">
+                        <div className="document-label">
+                          <span className="doc-icon">🪪</span>
+                          Driver's License
+                        </div>
+                        {verification.licenseDocument ? (
+                          <a
+                            href={verification.licenseDocument}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-sm btn-outline"
+                          >
+                            View Document
+                          </a>
+                        ) : (
+                          <span className="doc-pending">Not Submitted</span>
+                        )}
+                      </div>
+                      <div className="document-item">
+                        <div className="document-label">
+                          <span className="doc-icon">📸</span>
+                          Profile Photo
+                        </div>
+                        {verification.profilePhoto ? (
+                          <a
+                            href={verification.profilePhoto}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-sm btn-outline"
+                          >
+                            View Photo
+                          </a>
+                        ) : (
+                          <span className="doc-pending">Not Submitted</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {verification.notes && (
+                      <div className="verification-notes">
+                        <strong>Provider Notes:</strong>
+                        <p>{verification.notes}</p>
+                      </div>
+                    )}
+
+                    {verification.adminNotes && (
+                      <div className="admin-notes">
+                        <strong>Admin Notes:</strong>
+                        <p>{verification.adminNotes}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {verification.status === 'pending' && (
+                    <div className="verification-actions">
+                      <Button variant="outline" onClick={() => handleReject(verification.id)}>
+                        ❌ Reject
+                      </Button>
+                      <Button variant="primary" onClick={() => handleApprove(verification.id)}>
+                        ✅ Approve
+                      </Button>
+                    </div>
+                  )}
+
+                  {verification.status === 'rejected' && verification.rejectionReason && (
+                    <div className="rejection-reason">
+                      <strong>Rejection Reason:</strong>
+                      <p>{verification.rejectionReason}</p>
+                    </div>
+                  )}
+
+                  {verification.status === 'approved' && verification.verifiedAt && (
+                    <div className="approved-info">
+                      <span>✅ Verified on {formatDate(verification.verifiedAt)}</span>
+                    </div>
+                  )}
+                </Card>
+              );
+            })
+          ) : (
+            <Card>
+              <div className="empty-state">
+                <div className="empty-icon">✅</div>
+                <h3>No {activeTab !== 'all' ? activeTab : ''} verifications</h3>
+                <p>
+                  {activeTab === 'pending'
+                    ? 'All pending verifications have been reviewed'
+                    : `No ${activeTab} verifications found`}
+                </p>
+              </div>
+            </Card>
+          )}
+        </div>
+
+        <div className="table-footer">
+          <p>Showing {filteredVerifications.length} of {verifications.length} verifications</p>
+        </div>
       </div>
     </AdminLayout>
   );
