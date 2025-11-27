@@ -96,10 +96,10 @@ WSGI_APPLICATION = 'riderspool_backend.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Use PostgreSQL in production, SQLite in development
-if config('DATABASE_URL'):
+if os.getenv('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
-            default=config('DATABASE_URL'),
+            default=os.getenv('DATABASE_URL'),
             conn_max_age=600,
             conn_health_checks=True,
         )
@@ -225,18 +225,18 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Email Configuration
-EMAIL_BACKEND = config('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', 'smtp.gmail.com')
-EMAIL_PORT = config('EMAIL_PORT', 587, cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', 'True').lower() == 'true'
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', 'Riderspool <noreply@riderspool.com>')
+# # Email Configuration
+# EMAIL_BACKEND = config('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+# EMAIL_HOST = config('EMAIL_HOST', 'smtp.gmail.com')
+# EMAIL_PORT = config('EMAIL_PORT', 587, cast=int)
+# EMAIL_USE_TLS = config('EMAIL_USE_TLS', 'True').lower() == 'true'
+# EMAIL_HOST_USER = config('EMAIL_HOST_USER', '')
+# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', '')
+# DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', 'Riderspool <noreply@riderspool.com>')
 
-# For development, use console backend if no email credentials
-if DEBUG and not EMAIL_HOST_USER:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# # For development, use console backend if no email credentials
+# if DEBUG and not EMAIL_HOST_USER:
+#     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Frontend URL for email links
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
