@@ -15,6 +15,7 @@ import MyBookings from './pages/MyBookings';
 import MyInterviews from './pages/MyInterviews';
 import SavedProviders from './pages/SavedProviders';
 import Settings from './pages/Settings';
+import Verification from './pages/Verification';
 import NotFound from './pages/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 import EmployerRoute from './components/EmployerRoute';
@@ -111,6 +112,14 @@ function App() {
             element={
               <ProviderRoute>
                 <MyInterviews />
+              </ProviderRoute>
+            }
+          />
+          <Route
+            path="/verification"
+            element={
+              <ProviderRoute>
+                <Verification />
               </ProviderRoute>
             }
           />
