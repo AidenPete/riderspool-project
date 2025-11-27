@@ -84,10 +84,26 @@ function SearchProviders() {
 
   // Filter providers client-side for remaining filters
   const filteredProviders = providers.filter(provider => {
+    // Region filter (check preferredLocations)
     if (filters.region && filters.region !== 'All Regions') {
-      // Region filtering would need to be added to backend or matched client-side
-      // For now, skip this filter as backend doesn't have location field
+      const preferredLocations = provider.preferredLocations || '';
+      if (!preferredLocations.toLowerCase().includes(filters.region.toLowerCase())) {
+        return false;
+      }
     }
+
+    // Experience filter
+    if (filters.experience && filters.experience !== 'All Levels') {
+      const providerExperience = provider.experience || 0;
+      const expRange = filters.experience;
+
+      if (expRange === '0-1 years' && providerExperience > 1) return false;
+      if (expRange === '1-3 years' && (providerExperience < 1 || providerExperience > 3)) return false;
+      if (expRange === '3-5 years' && (providerExperience < 3 || providerExperience > 5)) return false;
+      if (expRange === '5-10 years' && (providerExperience < 5 || providerExperience > 10)) return false;
+      if (expRange === '10+ years' && providerExperience < 10) return false;
+    }
+
     return true;
   });
 

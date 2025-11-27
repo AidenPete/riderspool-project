@@ -10,6 +10,19 @@ function ProviderCard({ provider }) {
   const [isSaved, setIsSaved] = useState(provider.isSaved || false);
   const [savedId, setSavedId] = useState(provider.savedId || null);
 
+  const renderStars = (rating) => {
+    const stars = [];
+    const roundedRating = Math.round(rating || 0);
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span key={i} className={i <= roundedRating ? 'star filled' : 'star'}>
+          ★
+        </span>
+      );
+    }
+    return stars;
+  };
+
   const handleSave = async (e) => {
     e.preventDefault(); // Prevent navigation when clicking save button
     e.stopPropagation();
@@ -58,9 +71,14 @@ function ProviderCard({ provider }) {
           <h3>{displayName}</h3>
           <p className="provider-category">{categoryDisplay}</p>
           <div className="provider-rating">
-            <span className="stars">⭐ {provider.rating > 0 ? provider.rating : 'New'}</span>
+            <div className="stars-display">
+              {renderStars(provider.rating)}
+              <span className="rating-number">
+                {provider.rating > 0 ? Number(provider.rating).toFixed(1) : 'New'}
+              </span>
+            </div>
             {provider.totalInterviews > 0 && (
-              <span className="interviews">({provider.totalInterviews} interviews)</span>
+              <span className="interviews-count">({provider.totalInterviews} interviews)</span>
             )}
           </div>
         </div>
