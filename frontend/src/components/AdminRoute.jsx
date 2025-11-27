@@ -10,7 +10,10 @@ function AdminRoute({ children }) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  if (user?.userType !== 'admin') {
+  // Allow access for admin userType OR superusers/staff
+  const isAdmin = user?.userType === 'admin' || user?.is_superuser || user?.is_staff;
+
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 

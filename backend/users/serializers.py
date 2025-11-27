@@ -12,9 +12,10 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'email', 'fullName', 'phone', 'userType',
             'companyName', 'industry', 'contactPerson',
             'category', 'experience', 'isVerified',
+            'is_staff', 'is_superuser',
             'dateJoined', 'lastActive'
         ]
-        read_only_fields = ['id', 'dateJoined', 'lastActive', 'isVerified']
+        read_only_fields = ['id', 'dateJoined', 'lastActive', 'isVerified', 'is_staff', 'is_superuser']
 
 
 class RegisterSerializer(serializers.ModelSerializer):
