@@ -4,6 +4,7 @@ import { selectUser } from '../../features/auth/authSlice';
 import { interviewsAPI } from '../../api';
 import { getMediaUrl } from '../../api/axios';
 import Button from '../common/Button';
+import FeedbackModal from './FeedbackModal';
 import './InterviewDetailModal.css';
 
 function InterviewDetailModal({ interview, onClose, onUpdate }) {
@@ -11,6 +12,7 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
   const [loading, setLoading] = useState(false);
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [showRescheduleForm, setShowRescheduleForm] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [rescheduleData, setRescheduleData] = useState({
     date: '',
@@ -346,9 +348,23 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
                 </Button>
               )}
 
+              {/* Employer can submit feedback for completed interviews */}
+              {isEmployer && interview.status === 'completed' && !interview.feedback && (
+                <Button variant="primary" onClick={() => setShowFeedbackModal(true)}>
+                  Rate & Review
+                </Button>
+              )}
+
+              {/* Show feedback submitted status */}
+              {interview.status === 'completed' && interview.feedback && (
+                <div className="feedback-submitted-badge">
+                  ✓ Feedback Submitted
+                </div>
+              )}
+
               {/* Employer can mark provider as hired for completed interviews */}
               {isEmployer && interview.status === 'completed' && !interview.isHired && (
-                <Button variant="primary" onClick={handleMarkAsHired} disabled={loading}>
+                <Button variant="outline" onClick={handleMarkAsHired} disabled={loading}>
                   Mark as Hired
                 </Button>
               )}
@@ -381,6 +397,17 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
           )}
         </div>
       </div>
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && (
+        <FeedbackModal
+          interview={interview}
+          onClose={() => setShowFeedbackModal(false)}
+          onSuccess={() => {
+            if (onUpdate) onUpdate();
+          }}
+        />
+      )}
     </div>
   );
 }
