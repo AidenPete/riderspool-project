@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-// API base URL
-const BASE_URL = 'http://127.0.0.1:8000/api/';
+// API base URL - Use environment variable or fallback to localhost
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/';
 
 // Backend base URL for media files
-export const BACKEND_URL = 'http://127.0.0.1:8000';
+export const BACKEND_URL = BASE_URL.replace('/api/', '');
 
 // Helper function to get full media URL
 export const getMediaUrl = (path) => {
