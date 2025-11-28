@@ -164,62 +164,33 @@ function VerificationManagement() {
 
                   <div className="documents-section">
                     <h4>Submitted Documents:</h4>
-                    <div className="documents-grid">
-                      <div className="document-item">
-                        <div className="document-label">
-                          <span className="doc-icon">🆔</span>
-                          National ID
-                        </div>
-                        {verification.idDocument ? (
-                          <a
-                            href={verification.idDocument}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-outline"
-                          >
-                            View Document
-                          </a>
-                        ) : (
-                          <span className="doc-pending">Not Submitted</span>
-                        )}
+                    {verification.documents && verification.documents.length > 0 ? (
+                      <div className="documents-grid">
+                        {verification.documents.map(doc => (
+                          <div key={doc.id} className="document-item">
+                            <div className="document-label">
+                              <span className="doc-icon">
+                                {doc.documentType === 'national_id' ? '🆔' :
+                                 doc.documentType === 'driving_license' ? '🪪' : '📄'}
+                              </span>
+                              {doc.documentType === 'national_id' ? 'National ID' :
+                               doc.documentType === 'driving_license' ? "Driver's License" :
+                               doc.documentType}
+                            </div>
+                            <a
+                              href={doc.document}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-sm btn-outline"
+                            >
+                              View Document
+                            </a>
+                          </div>
+                        ))}
                       </div>
-                      <div className="document-item">
-                        <div className="document-label">
-                          <span className="doc-icon">🪪</span>
-                          Driver's License
-                        </div>
-                        {verification.licenseDocument ? (
-                          <a
-                            href={verification.licenseDocument}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-outline"
-                          >
-                            View Document
-                          </a>
-                        ) : (
-                          <span className="doc-pending">Not Submitted</span>
-                        )}
-                      </div>
-                      <div className="document-item">
-                        <div className="document-label">
-                          <span className="doc-icon">📸</span>
-                          Profile Photo
-                        </div>
-                        {verification.profilePhoto ? (
-                          <a
-                            href={verification.profilePhoto}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-outline"
-                          >
-                            View Photo
-                          </a>
-                        ) : (
-                          <span className="doc-pending">Not Submitted</span>
-                        )}
-                      </div>
-                    </div>
+                    ) : (
+                      <p className="doc-pending">No documents submitted</p>
+                    )}
 
                     {verification.notes && (
                       <div className="verification-notes">

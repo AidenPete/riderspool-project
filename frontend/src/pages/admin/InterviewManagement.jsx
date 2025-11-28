@@ -150,11 +150,11 @@ function InterviewManagement() {
             <tbody>
               {filteredInterviews.length > 0 ? (
                 filteredInterviews.map(interview => {
-                  const { date, time } = formatDateTime(interview.scheduledDate, interview.scheduledTime);
+                  const { date, time } = formatDateTime(interview.date, interview.time);
                   const employerName = interview.employer?.companyName || interview.employer?.fullName || 'N/A';
-                  const providerName = interview.provider?.name || 'N/A';
+                  const providerName = interview.provider?.fullName || interview.provider?.registeredName || 'N/A';
                   const providerCategory = interview.provider?.category || 'N/A';
-                  const officeName = interview.office?.name || 'N/A';
+                  const officeName = interview.officeLocation?.name || 'N/A';
 
                   return (
                     <tr key={interview.id}>
