@@ -10,6 +10,7 @@ export const AuthProvider = ({ children }) => {
     // Check if user is logged in (check localStorage)
     const storedUser = localStorage.getItem('riderspool_user');
     if (storedUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
