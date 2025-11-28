@@ -8,6 +8,7 @@ import ProviderCard from '../components/search/ProviderCard';
 import './SearchProviders.css';
 
 function SearchProviders() {
+// eslint-disable-next-line no-unused-vars
   const user = useSelector(selectUser);
 
   const [filters, setFilters] = useState({

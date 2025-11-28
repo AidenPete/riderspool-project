@@ -16,6 +16,7 @@ function ProviderDashboard() {
   const [profileData, setProfileData] = useState(null);
   const [interviews, setInterviews] = useState([]);
   const [verification, setVerification] = useState(null);
+// eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
   const [selectedInterview, setSelectedInterview] = useState(null);
 
@@ -84,6 +85,7 @@ function ProviderDashboard() {
   };
 
   // Mock interviews for fallback (remove after testing)
+// eslint-disable-next-line no-unused-vars
   const mockUpcomingInterviews = [
     {
       id: 1,

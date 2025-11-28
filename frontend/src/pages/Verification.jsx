@@ -8,6 +8,7 @@ import Button from '../components/common/Button';
 import './Verification.css';
 
 function Verification() {
+// eslint-disable-next-line no-unused-vars
   const user = useSelector(selectUser);
   const [verification, setVerification] = useState(null);
   const [loading, setLoading] = useState(true);

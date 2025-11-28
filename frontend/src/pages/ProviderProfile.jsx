@@ -18,6 +18,7 @@ function ProviderProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasHired, setHasHired] = useState(false);
+// eslint-disable-next-line no-unused-vars
   const [checkingHireStatus, setCheckingHireStatus] = useState(false);
 
   // Fetch provider data

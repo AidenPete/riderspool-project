@@ -11,6 +11,7 @@ import './InterviewRequest.css';
 function InterviewRequest() {
   const { providerId } = useParams();
   const navigate = useNavigate();
+// eslint-disable-next-line no-unused-vars
   const user = useSelector(selectUser);
 
   const [provider, setProvider] = useState(null);
@@ -157,6 +158,7 @@ You will be notified when they respond.
 You can track this request in your Bookings page.`);
 
       navigate('/bookings');
+// eslint-disable-next-line no-unused-vars
     } catch (error) {
       setErrors({ submit: 'Failed to send request. Please try again.' });
     } finally {

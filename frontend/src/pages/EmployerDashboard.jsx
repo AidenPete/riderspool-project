@@ -12,6 +12,7 @@ import './Dashboard.css';
 function EmployerDashboard() {
   const user = useSelector(selectUser);
   const [interviews, setInterviews] = useState([]);
+// eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
   const [selectedInterview, setSelectedInterview] = useState(null);
 

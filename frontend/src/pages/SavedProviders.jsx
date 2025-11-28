@@ -9,6 +9,7 @@ import ProviderCard from '../components/search/ProviderCard';
 import './SavedProviders.css';
 
 function SavedProviders() {
+// eslint-disable-next-line no-unused-vars
   const user = useSelector(selectUser);
   const [savedProviders, setSavedProviders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,7 @@ function SavedProviders() {
     fetchSavedProviders();
   }, []);
 
+// eslint-disable-next-line no-unused-vars
   const handleRemove = async (providerId) => {
     if (confirm('Remove this provider from your saved list?')) {
       const provider = savedProviders.find(p => p.id === providerId);

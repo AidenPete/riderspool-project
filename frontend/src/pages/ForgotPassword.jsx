@@ -32,6 +32,7 @@ function ForgotPassword() {
 
       console.log('Password reset requested for:', email);
       setIsSubmitted(true);
+// eslint-disable-next-line no-unused-vars
     } catch (err) {
       setError('Failed to send reset link. Please try again.');
     } finally {

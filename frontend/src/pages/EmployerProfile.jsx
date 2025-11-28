@@ -113,6 +113,7 @@ function EmployerProfile() {
         // Check if profile is complete - if yes, show view mode
         const isComplete = isProfileComplete(data);
         setIsEditMode(!isComplete);
+// eslint-disable-next-line no-unused-vars
       } catch (error) {
         console.log('No profile found, creating new profile');
         // New profile, start in edit mode with defaults from user

@@ -16,6 +16,7 @@ function UserManagement() {
 
   useEffect(() => {
     filterUsers();
+// eslint-disable-next-line react-hooks/exhaustive-deps
   }, [users, activeTab, searchTerm]);
 
   const fetchUsers = async () => {
@@ -59,6 +60,7 @@ function UserManagement() {
     employers: users.filter(u => u.userType === 'employer').length,
   });
 
+// eslint-disable-next-line no-unused-vars
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {

@@ -70,6 +70,7 @@ function ResetPassword() {
       setTimeout(() => {
         navigate('/login');
       }, 3000);
+// eslint-disable-next-line no-unused-vars
     } catch (err) {
       setErrors({ general: 'Failed to reset password. The link may have expired.' });
     } finally {

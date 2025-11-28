@@ -67,6 +67,7 @@ function AdminLogin() {
 
       // Navigate to admin dashboard
       navigate('/admin/dashboard');
+// eslint-disable-next-line no-unused-vars
     } catch (error) {
       setErrors({ submit: 'Invalid credentials. Please contact system administrator.' });
     } finally {

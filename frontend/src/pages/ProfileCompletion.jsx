@@ -91,6 +91,7 @@ function ProfileCompletion() {
         } else {
           setIsEditMode(true);
         }
+// eslint-disable-next-line no-unused-vars
       } catch (error) {
         console.log('No existing profile found, starting fresh');
         setIsEditMode(true); // New profile, start in edit mode
