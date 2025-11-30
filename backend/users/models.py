@@ -41,6 +41,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('admin', 'Administrator'),
     ]
 
+    EMPLOYER_TYPE_CHOICES = [
+        ('company', 'Company/Organization'),
+        ('individual', 'Individual/Household'),
+    ]
+
     CATEGORY_CHOICES = [
         ('motorbike-rider', 'Motorbike Rider'),
         ('car-driver', 'Car Driver'),
@@ -54,6 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     userType = models.CharField(max_length=20, choices=USER_TYPE_CHOICES)
 
     # Employer specific fields
+    employerType = models.CharField(max_length=20, choices=EMPLOYER_TYPE_CHOICES, blank=True, null=True, help_text='Type of employer: company or individual')
     companyName = models.CharField(max_length=255, blank=True, null=True)
     industry = models.CharField(max_length=100, blank=True, null=True)
     contactPerson = models.CharField(max_length=255, blank=True, null=True)
@@ -143,7 +149,7 @@ class ProviderProfile(models.Model):
 
 
 class EmployerProfile(models.Model):
-    """Extended profile for employers/companies"""
+    """Extended profile for employers (companies and individuals)"""
 
     COMPANY_SIZE_CHOICES = [
         ('1-10', '1-10 employees'),
@@ -155,17 +161,17 @@ class EmployerProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='employer_profile')
 
-    # Company details
-    companyName = models.CharField(max_length=255, help_text='Official company name')
-    industry = models.CharField(max_length=100)
-    contactPerson = models.CharField(max_length=255)
+    # Company details (required for companies, optional for individuals)
+    companyName = models.CharField(max_length=255, blank=True, null=True, help_text='Official company name (for companies)')
+    industry = models.CharField(max_length=100, blank=True, null=True)
+    contactPerson = models.CharField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=20)
     website = models.URLField(blank=True, null=True)
     companySize = models.CharField(max_length=20, choices=COMPANY_SIZE_CHOICES, blank=True, null=True)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True, help_text='Company description or individual hiring needs')
 
-    # Business registration
-    registrationNumber = models.CharField(max_length=100)
+    # Business registration (only for companies)
+    registrationNumber = models.CharField(max_length=100, blank=True, null=True)
     registrationCertificate = models.FileField(upload_to='documents/certificates/', blank=True, null=True)
 
     # Office location

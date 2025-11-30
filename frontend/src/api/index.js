@@ -7,4 +7,5 @@ export { default as verificationsAPI, verificationDocumentsAPI } from './verific
 export { notificationsAPI, notificationTemplatesAPI } from './notifications';
 export { default as savedProvidersAPI } from './saved';
 export { default as adminAPI } from './admin';
+export { default as jobsAPI, jobApplicationsAPI, applicationsAPI } from './jobs';
 export { default as api } from './axios';

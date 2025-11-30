@@ -170,12 +170,18 @@ function VerificationManagement() {
                           <div key={doc.id} className="document-item">
                             <div className="document-label">
                               <span className="doc-icon">
-                                {doc.documentType === 'national_id' ? '🆔' :
-                                 doc.documentType === 'driving_license' ? '🪪' : '📄'}
+                                {doc.documentType === 'id' ? '🆔' :
+                                 doc.documentType === 'license' ? '🪪' :
+                                 doc.documentType === 'profile_photo' ? '📸' : '📄'}
                               </span>
-                              {doc.documentType === 'national_id' ? 'National ID' :
-                               doc.documentType === 'driving_license' ? "Driver's License" :
+                              {doc.documentType === 'id' ? 'National ID' :
+                               doc.documentType === 'license' ? "Driver's License" :
+                               doc.documentType === 'profile_photo' ? 'Profile Photo' :
+                               doc.documentType === 'certificate' ? 'Certificate' :
                                doc.documentType}
+                            </div>
+                            <div className="document-meta">
+                              <small>{doc.fileName}</small>
                             </div>
                             <a
                               href={doc.document}

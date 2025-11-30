@@ -1,0 +1,17 @@
+/* Page Layout */
+.page-layout {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #fafafa;
+}
+
+.page-content {
+  margin: 0 auto;
+  padding: 2.5rem 2rem;
+}
+
+@media (max-width: 768px) {
+  .page-content {
+    padding: 1.5rem 1rem;
+  }
+}

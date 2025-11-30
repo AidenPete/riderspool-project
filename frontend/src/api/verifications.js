@@ -5,25 +5,25 @@ export const verificationsAPI = {
   // Get all verifications
   getVerifications: async (params = {}) => {
     const response = await api.get('verifications/', { params });
-    return response.data;
+    return response;
   },
 
   // Get single verification
   getVerification: async (id) => {
     const response = await api.get(`verifications/${id}/`);
-    return response.data;
+    return response;
   },
 
   // Create verification request
   createVerification: async () => {
     const response = await api.post('verifications/', {});
-    return response.data;
+    return response;
   },
 
   // Get my verification status
   getMyVerification: async () => {
     const response = await api.get('verifications/my-verification/');
-    return response.data;
+    return response;
   },
 
   // Approve verification (admin)
@@ -31,13 +31,13 @@ export const verificationsAPI = {
     const response = await api.post(`verifications/${id}/approve/`, {
       adminNotes,
     });
-    return response.data;
+    return response;
   },
 
   // Reject verification (admin)
   rejectVerification: async (id, rejectionData) => {
     const response = await api.post(`verifications/${id}/reject/`, rejectionData);
-    return response.data;
+    return response;
   },
 
   // Upload document
@@ -54,7 +54,7 @@ export const verificationsAPI = {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    return response;
   },
 };
 
@@ -63,13 +63,13 @@ export const verificationDocumentsAPI = {
   // Get all documents
   getDocuments: async (params = {}) => {
     const response = await api.get('documents/', { params });
-    return response.data;
+    return response;
   },
 
   // Get single document
   getDocument: async (id) => {
     const response = await api.get(`documents/${id}/`);
-    return response.data;
+    return response;
   },
 };
 

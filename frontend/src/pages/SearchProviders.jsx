@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
 import { providersAPI } from '../api';
-import Navbar from '../components/layout/Navbar';
+import PageLayout from '../components/layout/PageLayout';
+import PageHeader from '../components/common/PageHeader';
 import Card from '../components/common/Card';
 import ProviderCard from '../components/search/ProviderCard';
 import './SearchProviders.css';
@@ -109,15 +110,17 @@ function SearchProviders() {
   });
 
   return (
-    <div className="search-page">
-      <Navbar />
+    <PageLayout maxWidth="1400px">
+      <PageHeader
+        title="Find Service Providers"
+        subtitle="Browse and connect with verified professionals"
+        breadcrumbs={[
+          { label: 'Dashboard', path: '/dashboard' },
+          { label: 'Search Providers' }
+        ]}
+      />
 
       <div className="search-container">
-        <div className="search-header">
-          <h1>Find Service Providers</h1>
-          <p>Browse and connect with verified professionals</p>
-        </div>
-
         <div className="search-layout">
           {/* Filters Sidebar */}
           <aside className="filters-sidebar">
@@ -254,7 +257,7 @@ function SearchProviders() {
           </main>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }
 

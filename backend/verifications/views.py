@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from django.utils import timezone
+from django.db import models
 
 from .models import Verification, VerificationDocument
 from .serializers import (
@@ -18,7 +19,7 @@ from notifications.email_service import EmailService
 
 class VerificationViewSet(viewsets.ModelViewSet):
     """ViewSet for Verification model"""
-    queryset = Verification.objects.select_related('provider', 'reviewedBy').prefetch_related('documents').all()
+    queryset = Verification.objects.select_related('user', 'provider', 'reviewedBy').prefetch_related('documents').all()
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ['status']
@@ -29,6 +30,9 @@ class VerificationViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return VerificationCreateSerializer
         if self.action == 'list':
+            # Return full serializer for admin, simplified for providers
+            if self.request.user.is_admin or self.request.user.is_staff:
+                return VerificationSerializer
             return VerificationListSerializer
         return VerificationSerializer
 
@@ -37,22 +41,26 @@ class VerificationViewSet(viewsets.ModelViewSet):
         user = self.request.user
         queryset = super().get_queryset()
 
-        if user.is_provider:
+        if user.is_provider or user.is_employer:
+            # Return verifications where provider matches
             return queryset.filter(provider=user)
         elif user.is_admin or user.is_staff:
             return queryset
         return queryset.none()
 
     def create(self, request, *args, **kwargs):
-        """Create verification request (provider only)"""
-        if not request.user.is_provider:
+        """Create verification request (providers and employers)"""
+        if not (request.user.is_provider or request.user.is_employer):
             return Response(
-                {'error': 'Only providers can submit verification requests'},
+                {'error': 'Only providers and employers can submit verification requests'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Check if provider already has a pending verification
-        if Verification.objects.filter(provider=request.user, status='pending').exists():
+        # Check if user already has a pending verification
+        if Verification.objects.filter(
+            provider=request.user,
+            status='pending'
+        ).exists():
             return Response(
                 {'error': 'You already have a pending verification request'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -94,13 +102,14 @@ class VerificationViewSet(viewsets.ModelViewSet):
         verification.adminNotes = serializer.validated_data.get('adminNotes', '')
         verification.save()
 
-        # Mark user as verified
-        verification.provider.isVerified = True
-        verification.provider.save()
+        # Mark user as verified (use 'user' field if available, otherwise 'provider')
+        verified_user = verification.user if verification.user else verification.provider
+        verified_user.isVerified = True
+        verified_user.save()
 
-        # Send email notification to provider
+        # Send email notification
         try:
-            EmailService.send_verification_approved_email(verification.provider)
+            EmailService.send_verification_approved_email(verified_user)
         except Exception as e:
             print(f"Failed to send verification approved email: {e}")
 
@@ -137,10 +146,11 @@ class VerificationViewSet(viewsets.ModelViewSet):
         verification.adminNotes = serializer.validated_data.get('adminNotes', '')
         verification.save()
 
-        # Send email notification to provider
+        # Send email notification (use 'user' field if available, otherwise 'provider')
+        verified_user = verification.user if verification.user else verification.provider
         try:
             EmailService.send_verification_rejected_email(
-                verification.provider,
+                verified_user,
                 verification.rejectionReason
             )
         except Exception as e:
@@ -156,10 +166,11 @@ class VerificationViewSet(viewsets.ModelViewSet):
         """Upload document for verification"""
         verification = self.get_object()
 
-        # Check if user is the provider
-        if request.user != verification.provider:
+        # Check if user owns this verification
+        verified_user = verification.user if verification.user else verification.provider
+        if request.user != verified_user:
             return Response(
-                {'error': 'Only the provider can upload documents'},
+                {'error': 'Only the owner can upload documents'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -183,10 +194,10 @@ class VerificationViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='my-verification')
     def my_verification(self, request):
-        """Get provider's current verification status"""
-        if not request.user.is_provider:
+        """Get user's current verification status"""
+        if not (request.user.is_provider or request.user.is_employer):
             return Response(
-                {'error': 'Only providers can check verification status'},
+                {'error': 'Only providers and employers can check verification status'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -226,8 +237,10 @@ class VerificationDocumentViewSet(viewsets.ReadOnlyModelViewSet):
         user = self.request.user
         queryset = super().get_queryset()
 
-        if user.is_provider:
-            return queryset.filter(verification__provider=user)
+        if user.is_provider or user.is_employer:
+            return queryset.filter(
+                models.Q(verification__user=user) | models.Q(verification__provider=user)
+            )
         elif user.is_admin or user.is_staff:
             return queryset
         return queryset.none()

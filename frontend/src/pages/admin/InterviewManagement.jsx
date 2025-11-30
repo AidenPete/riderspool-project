@@ -152,7 +152,7 @@ function InterviewManagement() {
                 filteredInterviews.map(interview => {
                   const { date, time } = formatDateTime(interview.date, interview.time);
                   const employerName = interview.employer?.companyName || interview.employer?.fullName || 'N/A';
-                  const providerName = interview.provider?.fullName || interview.provider?.registeredName || 'N/A';
+                  const providerName = interview.provider?.name || interview.provider?.fullName || 'N/A';
                   const providerCategory = interview.provider?.category || 'N/A';
                   const officeName = interview.officeLocation?.name || 'N/A';
 

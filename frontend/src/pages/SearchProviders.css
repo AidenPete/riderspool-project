@@ -1,28 +1,6 @@
-.search-page {
-  width: 100%;
-  min-height: 100vh;
-  background-color: #f9fafb;
-}
-
+/* Search Container */
 .search-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
-.search-header {
-  margin-bottom: 2rem;
-}
-
-.search-header h1 {
-  font-size: 2rem;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-}
-
-.search-header p {
-  color: #6b7280;
-  font-size: 1rem;
+  width: 100%;
 }
 
 .search-layout {
@@ -53,17 +31,19 @@
 
 .filter-input,
 .filter-select {
-  padding: 0.625rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  transition: border-color 0.3s;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
 }
 
 .filter-input:focus,
 .filter-select:focus {
   outline: none;
-  border-color: #2563eb;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .checkbox-filter {
@@ -82,20 +62,25 @@
 
 .clear-filters-btn {
   width: 100%;
-  padding: 0.625rem;
-  background: transparent;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
   color: #6b7280;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-top: 1rem;
 }
 
+.clear-filters-btn:active {
+  transform: scale(0.98);
+}
+
 .clear-filters-btn:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+  background: #fafafa;
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
 
 /* Results */
@@ -106,14 +91,15 @@
 }
 
 .results-header h2 {
-  font-size: 1.5rem;
-  color: #1f2937;
+  font-size: 1.375rem;
+  color: #111827;
+  font-weight: 700;
 }
 
 .providers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 2rem;
 }
 
 .empty-results {

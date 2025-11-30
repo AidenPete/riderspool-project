@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
 import { verificationsAPI } from '../api';
-import Navbar from '../components/layout/Navbar';
+import PageLayout from '../components/layout/PageLayout';
+import PageHeader from '../components/common/PageHeader';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import './Verification.css';
@@ -93,8 +94,8 @@ function Verification() {
 
       // Upload each document
       const documentTypes = [
-        { key: 'nationalId', type: 'national_id' },
-        { key: 'drivingLicense', type: 'driving_license' },
+        { key: 'nationalId', type: 'id' },
+        { key: 'drivingLicense', type: 'license' },
       ];
 
       for (const docType of documentTypes) {
@@ -154,26 +155,28 @@ function Verification() {
 
   if (loading) {
     return (
-      <div className="verification-page">
-        <Navbar />
+      <PageLayout>
         <div className="verification-container">
           <h1>Loading...</h1>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   const canUpload = !verification || verification.status === 'rejected';
 
   return (
-    <div className="verification-page">
-      <Navbar />
+    <PageLayout maxWidth="1000px">
+      <PageHeader
+        title="Document Verification"
+        subtitle="Get verified to gain employer trust and unlock more opportunities"
+        breadcrumbs={[
+          { label: 'Dashboard', path: '/dashboard' },
+          { label: 'Verification' }
+        ]}
+      />
 
       <div className="verification-container">
-        <div className="verification-header">
-          <h1>Document Verification</h1>
-          <p>Get verified to gain employer trust and unlock more opportunities</p>
-        </div>
 
         {/* Current Status */}
         {verification && (
@@ -319,7 +322,7 @@ function Verification() {
           </Card>
         )}
       </div>
-    </div>
+    </PageLayout>
   );
 }
 

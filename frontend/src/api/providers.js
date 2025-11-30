@@ -5,19 +5,19 @@ export const providersAPI = {
   // Get all providers (with filters)
   getProviders: async (params = {}) => {
     const response = await api.get('providers/', { params });
-    return response.data;
+    return response;
   },
 
   // Get single provider
   getProvider: async (id) => {
     const response = await api.get(`providers/${id}/`);
-    return response.data;
+    return response;
   },
 
   // Get my provider profile
   getMyProfile: async () => {
     const response = await api.get('providers/my-profile/');
-    return response.data;
+    return response;
   },
 
   // Create/Update provider profile
@@ -30,7 +30,7 @@ export const providersAPI = {
       };
     }
     const response = await api.put('providers/my-profile/', profileData, config);
-    return response.data;
+    return response;
   },
 
   // Partial update provider profile
@@ -43,13 +43,13 @@ export const providersAPI = {
       };
     }
     const response = await api.patch('providers/my-profile/', profileData, config);
-    return response.data;
+    return response;
   },
 
   // Get saved providers (employer)
   getSavedProviders: async () => {
     const response = await api.get('saved-providers/');
-    return response.data;
+    return response;
   },
 
   // Save provider
@@ -57,19 +57,19 @@ export const providersAPI = {
     const response = await api.post('saved-providers/', {
       provider_id: providerId,
     });
-    return response.data;
+    return response;
   },
 
   // Unsave provider
   unsaveProvider: async (providerId) => {
     const response = await api.delete(`saved-providers/unsave/${providerId}/`);
-    return response.data;
+    return response;
   },
 
   // Check if employer has hired provider
   checkHasHired: async (providerId) => {
     const response = await api.get(`providers/${providerId}/has-hired/`);
-    return response.data;
+    return response;
   },
 };
 
@@ -78,25 +78,25 @@ export const usersAPI = {
   // Get all users
   getUsers: async (params = {}) => {
     const response = await api.get('users/', { params });
-    return response.data;
+    return response;
   },
 
   // Get single user
   getUser: async (id) => {
     const response = await api.get(`users/${id}/`);
-    return response.data;
+    return response;
   },
 
   // Update user
   updateUser: async (id, userData) => {
     const response = await api.put(`users/${id}/`, userData);
-    return response.data;
+    return response;
   },
 
   // Delete user
   deleteUser: async (id) => {
     const response = await api.delete(`users/${id}/`);
-    return response.data;
+    return response;
   },
 };
 

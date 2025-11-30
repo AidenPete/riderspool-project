@@ -177,6 +177,7 @@ class ProviderProfileViewSet(viewsets.ModelViewSet):
     search_fields = ['user__fullName', 'registeredName', 'skills']
     ordering_fields = ['rating', 'totalInterviews', 'experience']
     ordering = ['-rating']
+    lookup_field = 'user_id'  # Look up by User ID instead of ProviderProfile ID
 
     def get_serializer_class(self):
         """Return appropriate serializer based on action"""
@@ -190,16 +191,25 @@ class ProviderProfileViewSet(viewsets.ModelViewSet):
         """Filter available providers"""
         queryset = super().get_queryset()
 
-        # Filter by user type for employers
-        if self.request.user.is_employer:
-            # Show all available providers (verified or not)
-            # In production, you may want to add verification requirement back
-            queryset = queryset.filter(availability=True)
-            # Optionally: queryset = queryset.filter(availability=True, user__isVerified=True)
+        # For detail view, allow accessing any provider's profile
+        # Only filter for list view
+        if self.action == 'list':
+            # Filter by user type for employers
+            if self.request.user.is_employer:
+                # Show all available providers (verified or not)
+                # In production, you may want to add verification requirement back
+                queryset = queryset.filter(availability=True)
+                # Optionally: queryset = queryset.filter(availability=True, user__isVerified=True)
 
-        # Providers can only see their own profile
-        if self.request.user.is_provider:
-            queryset = queryset.filter(user=self.request.user)
+            # Providers can only see their own profile in list
+            elif self.request.user.is_provider:
+                queryset = queryset.filter(user=self.request.user)
+        elif self.action == 'retrieve':
+            # For detail view, providers can only see their own profile
+            # Employers can see any provider's profile
+            if self.request.user.is_provider:
+                queryset = queryset.filter(user=self.request.user)
+            # Admins and employers can see any provider
 
         return queryset
 

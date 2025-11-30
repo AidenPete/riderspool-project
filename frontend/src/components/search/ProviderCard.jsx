@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { savedProvidersAPI } from '../../api';
 import { getMediaUrl } from '../../api/axios';
 import Button from '../common/Button';
+import { toast } from '../../utils/toast';
 import './ProviderCard.css';
 
 function ProviderCard({ provider }) {
@@ -32,15 +33,17 @@ function ProviderCard({ provider }) {
         await savedProvidersAPI.removeSavedProvider(savedId);
         setIsSaved(false);
         setSavedId(null);
+        toast.info('Provider removed from saved list');
       } else {
         // Save the provider
         const result = await savedProvidersAPI.saveProvider(provider.user?.id || provider.id);
         setIsSaved(true);
         setSavedId(result.id);
+        toast.success('Provider saved successfully!');
       }
     } catch (error) {
       console.error('Error saving/unsaving provider:', error);
-      alert('Failed to update saved status. Please try again.');
+      toast.error('Failed to update saved status. Please try again.');
     }
   };
 
@@ -121,7 +124,7 @@ function ProviderCard({ provider }) {
 
         {provider.user?.isVerified && (
           <div className="verified-badge">
-            ✓ Documents Verified
+            ✓ Verified
           </div>
         )}
       </div>

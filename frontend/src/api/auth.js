@@ -4,60 +4,51 @@ import api from './axios';
 export const authAPI = {
   // Register new user
   register: async (userData) => {
-    const response = await api.post('auth/register/', userData);
-    return response.data;
+    return await api.post('auth/register/', userData);
   },
 
   // Login user
   login: async (credentials) => {
-    const response = await api.post('auth/login/', credentials);
-    return response.data;
+    return await api.post('auth/login/', credentials);
   },
 
   // Logout user
   logout: async (refreshToken) => {
-    const response = await api.post('auth/logout/', {
+    return await api.post('auth/logout/', {
       refresh_token: refreshToken,
     });
-    return response.data;
   },
 
   // Get current user
   getCurrentUser: async () => {
-    const response = await api.get('auth/me/');
-    return response.data;
+    return await api.get('auth/me/');
   },
 
   // Update current user
   updateCurrentUser: async (userData) => {
-    const response = await api.put('auth/me/', userData);
-    return response.data;
+    return await api.put('auth/me/', userData);
   },
 
   // Change password
   changePassword: async (passwordData) => {
-    const response = await api.post('auth/change-password/', passwordData);
-    return response.data;
+    return await api.post('auth/change-password/', passwordData);
   },
 
   // Refresh token
   refreshToken: async (refreshToken) => {
-    const response = await api.post('auth/refresh/', {
+    return await api.post('auth/refresh/', {
       refresh: refreshToken,
     });
-    return response.data;
   },
 
   // Get user settings
   getSettings: async () => {
-    const response = await api.get('settings/');
-    return response.data;
+    return await api.get('settings/');
   },
 
   // Update user settings
   updateSettings: async (settingsData) => {
-    const response = await api.patch('settings/', settingsData);
-    return response.data;
+    return await api.patch('settings/', settingsData);
   },
 };
 

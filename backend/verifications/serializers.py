@@ -17,6 +17,7 @@ class VerificationDocumentSerializer(serializers.ModelSerializer):
 
 class VerificationSerializer(serializers.ModelSerializer):
     """Serializer for Verification model"""
+    user = UserSerializer(read_only=True)
     provider = UserSerializer(read_only=True)
     reviewedBy = UserSerializer(read_only=True)
     documents = VerificationDocumentSerializer(many=True, read_only=True)
@@ -24,12 +25,12 @@ class VerificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Verification
         fields = [
-            'id', 'provider', 'status', 'reviewedBy',
+            'id', 'user', 'provider', 'status', 'reviewedBy',
             'rejectionReason', 'adminNotes', 'documents',
             'submittedAt', 'reviewedAt', 'updatedAt'
         ]
         read_only_fields = [
-            'id', 'provider', 'status', 'reviewedBy',
+            'id', 'user', 'provider', 'status', 'reviewedBy',
             'submittedAt', 'reviewedAt', 'updatedAt'
         ]
 
@@ -43,9 +44,10 @@ class VerificationCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create verification request"""
-        provider = self.context['request'].user
+        user = self.context['request'].user
         verification = Verification.objects.create(
-            provider=provider,
+            user=user,
+            provider=user if user.is_provider else None,  # Backward compatibility
             status='pending'
         )
         return verification
@@ -53,22 +55,33 @@ class VerificationCreateSerializer(serializers.ModelSerializer):
 
 class VerificationListSerializer(serializers.ModelSerializer):
     """Simplified serializer for verification list"""
-    provider_name = serializers.SerializerMethodField()
-    provider_category = serializers.SerializerMethodField()
+    user_name = serializers.SerializerMethodField()
+    user_type = serializers.SerializerMethodField()
+    user_category = serializers.SerializerMethodField()
     document_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Verification
         fields = [
-            'id', 'provider_name', 'provider_category',
+            'id', 'user_name', 'user_type', 'user_category',
             'status', 'document_count', 'submittedAt'
         ]
 
-    def get_provider_name(self, obj):
-        return obj.provider.fullName
+    def get_user_name(self, obj):
+        user = obj.user if obj.user else obj.provider
+        return user.fullName if user else None
 
-    def get_provider_category(self, obj):
-        return obj.provider.get_category_display() if obj.provider.category else None
+    def get_user_type(self, obj):
+        user = obj.user if obj.user else obj.provider
+        return user.get_userType_display() if user else None
+
+    def get_user_category(self, obj):
+        user = obj.user if obj.user else obj.provider
+        if user and user.is_provider and user.category:
+            return user.get_category_display()
+        elif user and user.is_employer:
+            return user.companyName
+        return None
 
     def get_document_count(self, obj):
         return obj.documents.count()

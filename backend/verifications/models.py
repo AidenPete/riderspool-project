@@ -3,7 +3,7 @@ from django.conf import settings
 
 
 class Verification(models.Model):
-    """Provider verification requests model"""
+    """Verification requests model for both providers and employers"""
 
     STATUS_CHOICES = [
         ('pending', 'Pending Review'),
@@ -11,10 +11,22 @@ class Verification(models.Model):
         ('rejected', 'Rejected'),
     ]
 
+    # Temporarily commented out until migration is created
+    # user = models.ForeignKey(
+    #     settings.AUTH_USER_MODEL,
+    #     on_delete=models.CASCADE,
+    #     related_name='verification_requests',
+    #     null=True,
+    #     blank=True
+    # )
+
+    # Keep provider field for backward compatibility
     provider = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name='verification_requests',
+        related_name='provider_verification_requests',
+        null=True,
+        blank=True,
         limit_choices_to={'userType': 'provider'}
     )
 
@@ -59,6 +71,9 @@ class VerificationDocument(models.Model):
         ('license', 'Driver\'s License'),
         ('profile_photo', 'Profile Photo'),
         ('certificate', 'Certificate'),
+        ('company_registration', 'Company Registration Certificate'),
+        ('tax_certificate', 'Tax Compliance Certificate'),
+        ('business_permit', 'Business Permit'),
         ('other', 'Other'),
     ]
 

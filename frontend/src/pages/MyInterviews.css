@@ -1,35 +1,13 @@
-.interviews-page {
-  width: 100%;
-  min-height: 100vh;
-  background-color: #f9fafb;
-}
-
-.interviews-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
-.interviews-back-button {
-  margin-bottom: 1.5rem;
-}
-
-.interviews-header {
+/* Interviews Container */
+.interviews-header-wrapper {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 2rem;
 }
 
-.interviews-header h1 {
-  font-size: 2rem;
-  color: #1f2937;
-  margin-bottom: 0.5rem;
-}
-
-.interviews-header p {
-  color: #6b7280;
-  font-size: 1rem;
+.interviews-container {
+  width: 100%;
 }
 
 /* Tabs */
@@ -215,13 +193,17 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .interviews-header {
+  .interviews-header-wrapper {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
 
-  .interviews-header button {
+  .interviews-header-wrapper a {
+    width: 100%;
+  }
+
+  .interviews-header-wrapper button {
     width: 100%;
   }
 

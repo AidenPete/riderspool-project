@@ -53,9 +53,14 @@ function EmployerDashboard() {
             <h1>Welcome back, {user?.contactPerson || user?.companyName}!</h1>
             <p className="dashboard-subtitle">{user?.companyName} - {user?.industry}</p>
           </div>
-          <Link to="/search">
-            <Button variant="primary">Find Service Providers</Button>
-          </Link>
+          <div className="dashboard-actions">
+            <Link to="/post-job">
+              <Button variant="primary">Post a Job</Button>
+            </Link>
+            <Link to="/search">
+              <Button variant="outline">Find Providers</Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -116,10 +121,10 @@ function EmployerDashboard() {
         {/* Quick Actions */}
         <div className="quick-actions-grid">
           <Card className="action-card">
-            <h3>🏢 Company Profile</h3>
-            <p>Update company details and registration</p>
-            <Link to="/employer/profile">
-              <Button variant="secondary" fullWidth>Edit Profile</Button>
+            <h3>💼 My Job Postings</h3>
+            <p>Manage your job listings and applications</p>
+            <Link to="/employer/jobs">
+              <Button variant="primary" fullWidth>View Jobs</Button>
             </Link>
           </Card>
           <Card className="action-card">

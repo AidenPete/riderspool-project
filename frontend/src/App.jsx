@@ -26,10 +26,19 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import InterviewManagement from './pages/admin/InterviewManagement';
 import VerificationManagement from './pages/admin/VerificationManagement';
+import ToastContainer from './components/common/ToastContainer';
+import PostJob from './pages/PostJob';
+import EmployerJobs from './pages/EmployerJobs';
+import BrowseJobs from './pages/BrowseJobs';
+import JobDetail from './pages/JobDetail';
+import MyApplications from './pages/MyApplications';
+import JobApplications from './pages/JobApplications';
+import EditJob from './pages/EditJob';
 
 function App() {
   return (
     <Router>
+      <ToastContainer />
       <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
@@ -97,8 +106,64 @@ function App() {
               </EmployerRoute>
             }
           />
+          <Route
+            path="/post-job"
+            element={
+              <EmployerRoute>
+                <PostJob />
+              </EmployerRoute>
+            }
+          />
+          <Route
+            path="/employer/jobs"
+            element={
+              <EmployerRoute>
+                <EmployerJobs />
+              </EmployerRoute>
+            }
+          />
+          <Route
+            path="/jobs/:jobId/applications"
+            element={
+              <EmployerRoute>
+                <JobApplications />
+              </EmployerRoute>
+            }
+          />
+          <Route
+            path="/jobs/:jobId/edit"
+            element={
+              <EmployerRoute>
+                <EditJob />
+              </EmployerRoute>
+            }
+          />
 
           {/* Provider Routes */}
+          <Route
+            path="/jobs"
+            element={
+              <ProtectedRoute>
+                <BrowseJobs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/jobs/:jobId"
+            element={
+              <ProtectedRoute>
+                <JobDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-applications"
+            element={
+              <ProviderRoute>
+                <MyApplications />
+              </ProviderRoute>
+            }
+          />
           <Route
             path="/provider/profile"
             element={

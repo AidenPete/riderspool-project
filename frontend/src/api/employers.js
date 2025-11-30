@@ -4,7 +4,7 @@ const employersAPI = {
   // Get my employer profile
   getMyProfile: async () => {
     const response = await api.get('employers/my-profile/');
-    return response.data;
+    return response;
   },
 
   // Update my employer profile
@@ -17,19 +17,19 @@ const employersAPI = {
       };
     }
     const response = await api.put('employers/my-profile/', profileData, config);
-    return response.data;
+    return response;
   },
 
   // Get all employers (admin only)
   getAllEmployers: async () => {
     const response = await api.get('employers/');
-    return response.data;
+    return response;
   },
 
   // Get employer by ID
   getEmployerById: async (id) => {
     const response = await api.get(`employers/${id}/`);
-    return response.data;
+    return response;
   },
 };
 

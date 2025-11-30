@@ -5,6 +5,8 @@ import { interviewsAPI } from '../../api';
 import { getMediaUrl } from '../../api/axios';
 import Button from '../common/Button';
 import FeedbackModal from './FeedbackModal';
+import ConfirmModal from '../common/ConfirmModal';
+import { toast } from '../../utils/toast';
 import './InterviewDetailModal.css';
 
 function InterviewDetailModal({ interview, onClose, onUpdate }) {
@@ -13,6 +15,9 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [showRescheduleForm, setShowRescheduleForm] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showHiredModal, setShowHiredModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [rescheduleData, setRescheduleData] = useState({
     date: '',
@@ -39,19 +44,15 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
   };
 
   const handleConfirm = async () => {
-    if (!window.confirm('Are you sure you want to confirm this interview?')) {
-      return;
-    }
-
     setLoading(true);
     try {
       await interviewsAPI.confirmInterview(interview.id);
-      alert('Interview confirmed successfully!');
+      toast.success('Interview confirmed successfully!');
       if (onUpdate) onUpdate();
       onClose();
     } catch (error) {
       console.error('Error confirming interview:', error);
-      alert(error.response?.data?.error || 'Failed to confirm interview. Please try again.');
+      toast.error(error.response?.data?.error || 'Failed to confirm interview. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -59,19 +60,19 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
 
   const handleCancel = async () => {
     if (!cancelReason.trim()) {
-      alert('Please provide a cancellation reason');
+      toast.warning('Please provide a cancellation reason');
       return;
     }
 
     setLoading(true);
     try {
       await interviewsAPI.cancelInterview(interview.id, cancelReason);
-      alert('Interview cancelled successfully');
+      toast.success('Interview cancelled successfully');
       if (onUpdate) onUpdate();
       onClose();
     } catch (error) {
       console.error('Error cancelling interview:', error);
-      alert(error.response?.data?.error || 'Failed to cancel interview. Please try again.');
+      toast.error(error.response?.data?.error || 'Failed to cancel interview. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -81,38 +82,49 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
     e.preventDefault();
 
     if (!rescheduleData.date || !rescheduleData.time || !rescheduleData.rescheduleReason.trim()) {
-      alert('Please fill in all fields');
+      toast.warning('Please fill in all fields');
       return;
     }
 
     setLoading(true);
     try {
       await interviewsAPI.rescheduleInterview(interview.id, rescheduleData);
-      alert('Interview rescheduled successfully! The other party will be notified.');
+      toast.success('Interview rescheduled successfully! The other party will be notified.');
       if (onUpdate) onUpdate();
       onClose();
     } catch (error) {
       console.error('Error rescheduling interview:', error);
-      alert(error.response?.data?.error || 'Failed to reschedule interview. Please try again.');
+      toast.error(error.response?.data?.error || 'Failed to reschedule interview. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleComplete = async () => {
+    setLoading(true);
+    try {
+      await interviewsAPI.completeInterview(interview.id);
+      toast.success('Interview marked as completed!');
+      if (onUpdate) onUpdate();
+      onClose();
+    } catch (error) {
+      console.error('Error completing interview:', error);
+      toast.error(error.response?.data?.error || 'Failed to complete interview. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleMarkAsHired = async () => {
-    if (!window.confirm('Mark this provider as hired? This will grant you access to their sensitive information.')) {
-      return;
-    }
-
     setLoading(true);
     try {
       await interviewsAPI.markAsHired(interview.id);
-      alert('Provider marked as hired successfully!');
+      toast.success('Provider marked as hired successfully!');
       if (onUpdate) onUpdate();
       onClose();
     } catch (error) {
       console.error('Error marking as hired:', error);
-      alert(error.response?.data?.error || 'Failed to mark provider as hired. Please try again.');
+      toast.error(error.response?.data?.error || 'Failed to mark provider as hired. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -186,7 +198,12 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
                   </>
                 )}
                 {isProvider && interview.employer && (
-                  <p className="text-muted">{interview.employer.industry || 'Company'}</p>
+                  <>
+                    <p className="text-muted">{interview.employer.industry || 'Company'}</p>
+                    {interview.employer.companyDescription && (
+                      <p className="company-description">{interview.employer.companyDescription}</p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -251,6 +268,33 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
                 <div>
                   <strong>Reschedule Reason:</strong>
                   <p>{interview.rescheduleReason}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Feedback Display for Completed Interviews */}
+          {interview.status === 'completed' && interview.feedback && (
+            <div className="detail-section feedback-display-section">
+              <h3>Interview Feedback</h3>
+              <div className="feedback-content">
+                <div className="feedback-rating">
+                  <strong>Rating:</strong>
+                  <div className="rating-stars">
+                    {renderStars(interview.feedback.rating || 0)}
+                    <span className="rating-number">{interview.feedback.rating}/5</span>
+                  </div>
+                </div>
+                {interview.feedback.comments && (
+                  <div className="feedback-comments">
+                    <strong>Comments:</strong>
+                    <p>{interview.feedback.comments}</p>
+                  </div>
+                )}
+                <div className="feedback-meta">
+                  <p className="text-muted">
+                    Submitted on {new Date(interview.feedback.createdAt || interview.feedback.submittedAt).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
             </div>
@@ -343,8 +387,15 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
             <div className="modal-actions">
               {/* Provider can confirm pending interviews */}
               {isProvider && interview.status === 'pending' && (
-                <Button variant="primary" onClick={handleConfirm} disabled={loading}>
+                <Button variant="primary" onClick={() => setShowConfirmModal(true)} disabled={loading}>
                   Confirm Interview
+                </Button>
+              )}
+
+              {/* Both parties can mark interview as complete */}
+              {interview.status === 'confirmed' && (
+                <Button variant="primary" onClick={() => setShowCompleteModal(true)} disabled={loading}>
+                  Mark as Completed
                 </Button>
               )}
 
@@ -364,7 +415,7 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
 
               {/* Employer can mark provider as hired for completed interviews */}
               {isEmployer && interview.status === 'completed' && !interview.isHired && (
-                <Button variant="outline" onClick={handleMarkAsHired} disabled={loading}>
+                <Button variant="outline" onClick={() => setShowHiredModal(true)} disabled={loading}>
                   Mark as Hired
                 </Button>
               )}
@@ -408,6 +459,39 @@ function InterviewDetailModal({ interview, onClose, onUpdate }) {
           }}
         />
       )}
+
+      {/* Confirm Interview Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirm}
+        title="Confirm Interview"
+        message="Are you sure you want to confirm this interview? The employer will be notified."
+        confirmText="Confirm"
+        type="success"
+      />
+
+      {/* Complete Interview Modal */}
+      <ConfirmModal
+        isOpen={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+        onConfirm={handleComplete}
+        title="Complete Interview"
+        message="Mark this interview as completed?"
+        confirmText="Mark as Completed"
+        type="success"
+      />
+
+      {/* Mark as Hired Modal */}
+      <ConfirmModal
+        isOpen={showHiredModal}
+        onClose={() => setShowHiredModal(false)}
+        onConfirm={handleMarkAsHired}
+        title="Mark Provider as Hired"
+        message="Mark this provider as hired? This will grant you access to their sensitive information."
+        confirmText="Mark as Hired"
+        type="info"
+      />
     </div>
   );
 }

@@ -91,7 +91,7 @@ function AdminDashboard() {
 
   const getActivityText = (interview) => {
     const employer = interview.employer?.companyName || interview.employer?.fullName || 'Employer';
-    const provider = interview.provider?.fullName || interview.provider?.registeredName || 'Provider';
+    const provider = interview.provider?.name || interview.provider?.fullName || 'Provider';
 
     switch (interview.status) {
       case 'pending':

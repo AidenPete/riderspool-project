@@ -312,6 +312,20 @@ function ProviderDashboard() {
         {/* Quick Actions */}
         <div className="quick-actions-grid">
           <Card className="action-card">
+            <h3>💼 Browse Jobs</h3>
+            <p>Find and apply for job opportunities</p>
+            <Link to="/jobs">
+              <Button variant="primary" fullWidth>Browse Jobs</Button>
+            </Link>
+          </Card>
+          <Card className="action-card">
+            <h3>📄 My Applications</h3>
+            <p>Track your job applications</p>
+            <Link to="/my-applications">
+              <Button variant="secondary" fullWidth>View Applications</Button>
+            </Link>
+          </Card>
+          <Card className="action-card">
             <h3>📝 Complete Profile</h3>
             <p>Add documents, photos, and experience</p>
             <Link to="/provider/profile">
@@ -323,13 +337,6 @@ function ProviderDashboard() {
             <p>View interview requests and history</p>
             <Link to="/interviews">
               <Button variant="secondary" fullWidth>View All</Button>
-            </Link>
-          </Card>
-          <Card className="action-card">
-            <h3>⚙️ Settings</h3>
-            <p>Update preferences and availability</p>
-            <Link to="/settings">
-              <Button variant="secondary" fullWidth>Manage</Button>
             </Link>
           </Card>
         </div>

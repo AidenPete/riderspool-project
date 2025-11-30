@@ -5,7 +5,7 @@ export const savedProvidersAPI = {
   // Get all saved providers for current employer
   getSavedProviders: async () => {
     const response = await api.get('saved-providers/');
-    return response.data;
+    return response;
   },
 
   // Save a provider
@@ -13,13 +13,13 @@ export const savedProvidersAPI = {
     const response = await api.post('saved-providers/', {
       provider_id: providerId,
     });
-    return response.data;
+    return response;
   },
 
   // Remove a saved provider
   removeSavedProvider: async (savedProviderId) => {
     const response = await api.delete(`saved-providers/${savedProviderId}/`);
-    return response.data;
+    return response;
   },
 
   // Check if a provider is saved

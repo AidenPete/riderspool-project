@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
 import { providersAPI, interviewsAPI, officeLocationsAPI } from '../api';
-import Navbar from '../components/layout/Navbar';
+import PageLayout from '../components/layout/PageLayout';
+import PageHeader from '../components/common/PageHeader';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import './InterviewRequest.css';
@@ -138,7 +139,7 @@ function InterviewRequest() {
 
       // Prepare interview request data for API
       const interviewData = {
-        provider_id: parseInt(providerId),
+        provider_id: provider.user.id, // Use user ID, not provider profile ID
         date: formData.date,
         time: convert12to24(formData.time),
         officeLocation_id: parseInt(formData.officeLocation),
@@ -174,49 +175,46 @@ You can track this request in your Bookings page.`);
 
   if (loading) {
     return (
-      <div className="interview-request-page">
-        <Navbar />
-        <div className="interview-request-container">
-          <Card>
-            <div className="empty-results">
-              <div className="empty-icon">⏳</div>
-              <h3>Loading...</h3>
-              <p>Please wait while we fetch the provider information</p>
-            </div>
-          </Card>
-        </div>
-      </div>
+      <PageLayout>
+        <Card>
+          <div className="empty-results">
+            <div className="empty-icon">⏳</div>
+            <h3>Loading...</h3>
+            <p>Please wait while we fetch the provider information</p>
+          </div>
+        </Card>
+      </PageLayout>
     );
   }
 
   if (errors.fetch || !provider) {
     return (
-      <div className="interview-request-page">
-        <Navbar />
-        <div className="interview-request-container">
-          <Card>
-            <div className="empty-results">
-              <div className="empty-icon">⚠️</div>
-              <h3>Error</h3>
-              <p>{errors.fetch || 'Failed to load provider information'}</p>
-              <Button onClick={() => navigate(-1)}>Go Back</Button>
-            </div>
-          </Card>
-        </div>
-      </div>
+      <PageLayout>
+        <Card>
+          <div className="empty-results">
+            <div className="empty-icon">⚠️</div>
+            <h3>Error</h3>
+            <p>{errors.fetch || 'Failed to load provider information'}</p>
+            <Button onClick={() => navigate(-1)}>Go Back</Button>
+          </div>
+        </Card>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="interview-request-page">
-      <Navbar />
+    <PageLayout maxWidth="1200px">
+      <PageHeader
+        title="Request Interview"
+        subtitle={`Schedule an interview with ${provider.user?.fullName || provider.registeredName}`}
+        breadcrumbs={[
+          { label: 'Dashboard', path: '/dashboard' },
+          { label: 'Search Providers', path: '/search' },
+          { label: 'Request Interview' }
+        ]}
+      />
 
       <div className="interview-request-container">
-        <div className="request-header">
-          <h1>Request Interview</h1>
-          <p>Schedule an interview with {provider.user?.fullName || provider.registeredName}</p>
-        </div>
-
         <div className="request-layout">
           {/* Provider Info Sidebar */}
           <aside className="provider-info-sidebar">
@@ -369,7 +367,7 @@ You can track this request in your Bookings page.`);
           </main>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }
 

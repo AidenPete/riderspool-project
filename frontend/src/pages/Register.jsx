@@ -12,6 +12,7 @@ function Register() {
 
   const [formData, setFormData] = useState({
     userType: userType,
+    employerType: '', // company or individual
     // Common fields
     email: '',
     phone: '',
@@ -30,7 +31,7 @@ function Register() {
   const isLoading = useSelector(selectLoading);
   const apiError = useSelector(selectError);
 
-  const industries = [
+  const companyIndustries = [
     'Construction',
     'NGO / Non-Profit',
     'Government',
@@ -43,6 +44,20 @@ function Register() {
     'Real Estate',
     'Technology',
     'Education',
+    'Other',
+  ];
+
+  const individualHiringNeeds = [
+    'Personal Driver',
+    'Family Transportation',
+    'School Runs',
+    'Elderly Care Transportation',
+    'Shopping & Errands',
+    'Airport Transfers',
+    'Event Transportation',
+    'Business Trips',
+    'Delivery Services',
+    'Household Help',
     'Other',
   ];
 
@@ -71,6 +86,7 @@ function Register() {
     setFormData(prev => ({
       ...prev,
       userType: type,
+      employerType: '',
       // Clear type-specific fields
       companyName: '',
       contactPerson: '',
@@ -82,21 +98,45 @@ function Register() {
     setErrors({});
   };
 
+  const handleEmployerTypeChange = (type) => {
+    setFormData(prev => ({
+      ...prev,
+      employerType: type,
+      // Clear company fields if switching to individual
+      companyName: type === 'individual' ? '' : prev.companyName,
+    }));
+    if (errors.employerType) {
+      setErrors(prev => ({
+        ...prev,
+        employerType: ''
+      }));
+    }
+  };
+
   const validate = () => {
     const newErrors = {};
 
     // Employer-specific validation
     if (formData.userType === 'employer') {
-      if (!formData.companyName.trim()) {
+      if (!formData.employerType) {
+        newErrors.employerType = 'Please select employer type';
+      }
+
+      // Company employers must have company name
+      if (formData.employerType === 'company' && !formData.companyName.trim()) {
         newErrors.companyName = 'Company name is required';
       }
 
       if (!formData.contactPerson.trim()) {
-        newErrors.contactPerson = 'Contact person name is required';
+        newErrors.contactPerson = formData.employerType === 'individual'
+          ? 'Your full name is required'
+          : 'Contact person name is required';
       }
 
       if (!formData.industry) {
-        newErrors.industry = 'Please select an industry';
+        newErrors.industry = formData.employerType === 'individual'
+          ? 'Please select your hiring need'
+          : 'Please select an industry';
       }
     }
 
@@ -170,7 +210,8 @@ function Register() {
       // Add employer-specific fields
       if (formData.userType === 'employer') {
         registrationData.fullName = formData.contactPerson; // Use contact person as full name
-        registrationData.companyName = formData.companyName;
+        registrationData.employerType = formData.employerType;
+        registrationData.companyName = formData.employerType === 'company' ? formData.companyName : null;
         registrationData.contactPerson = formData.contactPerson;
         registrationData.industry = formData.industry;
       }
@@ -223,22 +264,54 @@ function Register() {
           {/* Employer Form */}
           {formData.userType === 'employer' && (
             <>
+              {/* Employer Type Selection */}
               <div className="form-group">
-                <label htmlFor="companyName">Company Name</label>
-                <input
-                  type="text"
-                  id="companyName"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  className={errors.companyName ? 'error' : ''}
-                  placeholder="ABC Company Ltd"
-                />
-                {errors.companyName && <span className="error-message">{errors.companyName}</span>}
+                <label>I am registering as:</label>
+                <div className="employer-type-selector">
+                  <button
+                    type="button"
+                    className={`employer-type-btn ${formData.employerType === 'company' ? 'active' : ''}`}
+                    onClick={() => handleEmployerTypeChange('company')}
+                  >
+                    <div className="employer-type-icon">🏢</div>
+                    <div className="employer-type-label">Company/Organization</div>
+                    <div className="employer-type-desc">Hiring for a business</div>
+                  </button>
+                  <button
+                    type="button"
+                    className={`employer-type-btn ${formData.employerType === 'individual' ? 'active' : ''}`}
+                    onClick={() => handleEmployerTypeChange('individual')}
+                  >
+                    <div className="employer-type-icon">👤</div>
+                    <div className="employer-type-label">Individual/Household</div>
+                    <div className="employer-type-desc">Personal hiring needs</div>
+                  </button>
+                </div>
+                {errors.employerType && <span className="error-message">{errors.employerType}</span>}
               </div>
 
+              {/* Company Name - Only for companies */}
+              {formData.employerType === 'company' && (
+                <div className="form-group">
+                  <label htmlFor="companyName">Company Name</label>
+                  <input
+                    type="text"
+                    id="companyName"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    className={errors.companyName ? 'error' : ''}
+                    placeholder="ABC Company Ltd"
+                  />
+                  {errors.companyName && <span className="error-message">{errors.companyName}</span>}
+                </div>
+              )}
+
+              {/* Contact Person / Full Name */}
               <div className="form-group">
-                <label htmlFor="contactPerson">Contact Person Name</label>
+                <label htmlFor="contactPerson">
+                  {formData.employerType === 'individual' ? 'Your Full Name' : 'Contact Person Name'}
+                </label>
                 <input
                   type="text"
                   id="contactPerson"
@@ -251,8 +324,11 @@ function Register() {
                 {errors.contactPerson && <span className="error-message">{errors.contactPerson}</span>}
               </div>
 
+              {/* Industry / Hiring Need */}
               <div className="form-group">
-                <label htmlFor="industry">Industry Type</label>
+                <label htmlFor="industry">
+                  {formData.employerType === 'individual' ? 'Hiring Need' : 'Industry Type'}
+                </label>
                 <select
                   id="industry"
                   name="industry"
@@ -260,8 +336,10 @@ function Register() {
                   onChange={handleChange}
                   className={errors.industry ? 'error' : ''}
                 >
-                  <option value="">Select industry...</option>
-                  {industries.map(ind => (
+                  <option value="">
+                    {formData.employerType === 'individual' ? 'Select hiring need...' : 'Select industry...'}
+                  </option>
+                  {(formData.employerType === 'individual' ? individualHiringNeeds : companyIndustries).map(ind => (
                     <option key={ind} value={ind}>{ind}</option>
                   ))}
                 </select>
@@ -386,7 +464,9 @@ function Register() {
             <span>
               {formData.userType === 'provider'
                 ? 'You can complete your full profile and upload documents (ID, license, photos) after registration.'
-                : 'You can add more company details and upload verification documents after registration.'}
+                : formData.employerType === 'individual'
+                ? 'You can add more details and upload verification documents (ID, proof of address) after registration.'
+                : 'You can add more company details and upload verification documents (registration certificate, tax documents) after registration.'}
             </span>
           </div>
 

@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/auth/authSlice';
 import { interviewsAPI } from '../api';
-import Navbar from '../components/layout/Navbar';
+import PageLayout from '../components/layout/PageLayout';
+import PageHeader from '../components/common/PageHeader';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import InterviewDetailModal from '../components/interview/InterviewDetailModal';
@@ -181,26 +182,22 @@ function MyInterviews() {
   };
 
   return (
-    <div className="interviews-page">
-      <Navbar />
+    <PageLayout maxWidth="1200px">
+      <div className="interviews-header-wrapper">
+        <PageHeader
+          title="My Interviews"
+          subtitle="Manage your interview requests"
+          breadcrumbs={[
+            { label: 'Dashboard', path: '/dashboard' },
+            { label: 'My Interviews' }
+          ]}
+        />
+        <Link to="/provider/profile">
+          <Button variant="primary">Update Profile</Button>
+        </Link>
+      </div>
 
       <div className="interviews-container">
-        {/* Back Button */}
-        <div className="interviews-back-button">
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            ← Back
-          </Button>
-        </div>
-
-        <div className="interviews-header">
-          <div>
-            <h1>My Interviews</h1>
-            <p>Manage your interview requests</p>
-          </div>
-          <Link to="/provider/profile">
-            <Button variant="primary">Update Profile</Button>
-          </Link>
-        </div>
 
         {/* Tabs */}
         <div className="interviews-tabs">
@@ -321,7 +318,7 @@ function MyInterviews() {
           onUpdate={handleUpdateInterview}
         />
       )}
-    </div>
+    </PageLayout>
   );
 }
 

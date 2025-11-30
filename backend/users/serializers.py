@@ -9,7 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'fullName', 'phone', 'userType',
+            'id', 'email', 'fullName', 'phone', 'userType', 'employerType',
             'companyName', 'industry', 'contactPerson',
             'category', 'experience', 'isVerified',
             'is_staff', 'is_superuser',
@@ -26,7 +26,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'email', 'password', 'password2', 'fullName', 'phone', 'userType',
+            'email', 'password', 'password2', 'fullName', 'phone', 'userType', 'employerType',
             'companyName', 'industry', 'contactPerson',
             'category', 'experience'
         ]
@@ -38,10 +38,20 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         # Validate employer-specific fields
         if attrs['userType'] == 'employer':
-            if not attrs.get('companyName'):
-                raise serializers.ValidationError({"companyName": "Company name is required for employers"})
-            if not attrs.get('industry'):
-                raise serializers.ValidationError({"industry": "Industry is required for employers"})
+            employer_type = attrs.get('employerType')
+            if not employer_type:
+                raise serializers.ValidationError({"employerType": "Employer type is required (company or individual)"})
+
+            # Company employers must have company name and industry
+            if employer_type == 'company':
+                if not attrs.get('companyName'):
+                    raise serializers.ValidationError({"companyName": "Company name is required for company employers"})
+                if not attrs.get('industry'):
+                    raise serializers.ValidationError({"industry": "Industry is required for company employers"})
+            # Individual employers don't need company name, but industry is helpful
+            elif employer_type == 'individual':
+                # Optional: Clear company name for individuals
+                attrs['companyName'] = None
 
         # Validate provider-specific fields
         if attrs['userType'] == 'provider':

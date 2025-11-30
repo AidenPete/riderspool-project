@@ -42,7 +42,8 @@ api.interceptors.request.use(
 // Response interceptor - Handle token refresh
 api.interceptors.response.use(
   (response) => {
-    return response;
+    // Return response.data instead of full response object
+    return response.data;
   },
   async (error) => {
     const originalRequest = error.config;
